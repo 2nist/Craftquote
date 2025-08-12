@@ -720,18 +720,6 @@
         function syncToExternalSystems(config) {
             console.log('🔗 Syncing configuration to external systems...');
             
-            // Sync to Pipedrive (if configured)
-            if (typeof google !== 'undefined' && google.script) {
-                google.script.run
-                    .withSuccessHandler(function(result) {
-                        console.log('✅ Pipedrive sync completed:', result);
-                    })
-                    .withFailureHandler(function(error) {
-                        console.warn('⚠️ Pipedrive sync failed:', error);
-                    })
-                    .syncBrandingToPipedrive(config);
-            }
-            
             // Sync to local storage as backup
             localStorage.setItem('craftquote-branding-backup', JSON.stringify({
                 config: config,

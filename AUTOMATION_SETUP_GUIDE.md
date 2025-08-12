@@ -29,7 +29,6 @@ Notifications (Email/Slack)
    - Admin permissions to create custom fields
 
 3. **Optional Integrations:**
-   - Slack workspace (for notifications)
    - Custom domain (for webhook endpoints)
 
 ## ⚙️ Step-by-Step Setup
@@ -134,7 +133,6 @@ Notifications (Email/Slack)
    function configureNotifications() {
      const properties = PropertiesService.getScriptProperties();
      properties.setProperties({
-       'SLACK_WEBHOOK_URL': 'https://hooks.slack.com/YOUR_WEBHOOK',
        'NOTIFICATION_EMAIL': 'admin@yourcompany.com'
      });
    }
@@ -155,7 +153,6 @@ Notifications (Email/Slack)
   'AUDIT_SHEET_ID': 'sheet_id_for_audit_trail',
   
   // Notifications
-  'SLACK_WEBHOOK_URL': 'slack_webhook_url',
   'NOTIFICATION_EMAIL': 'notifications@yourcompany.com'
 }
 ```

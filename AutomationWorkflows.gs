@@ -253,16 +253,6 @@ function sendWorkflowNotifications(workflowResult) {
       status: 'sent'
     });
     
-    // Slack notification (if configured)
-    const slackWebhook = PropertiesService.getScriptProperties().getProperty('SLACK_WEBHOOK_URL');
-    if (slackWebhook) {
-      sendSlackNotification(slackWebhook, workflowResult);
-      notifications.push({
-        type: 'slack',
-        status: 'sent'
-      });
-    }
-    
     Logger.log('📧 Workflow notifications sent');
     
   } catch (error) {
@@ -342,65 +332,6 @@ function generateWorkflowEmailBody(workflowResult) {
     </body>
     </html>
   `;
-}
-
-/**
- * Send Slack notification
- */
-function sendSlackNotification(webhookUrl, workflowResult) {
-  try {
-    const statusEmoji = workflowResult.success ? ':white_check_mark:' : ':warning:';
-    const statusColor = workflowResult.success ? 'good' : 'warning';
-    
-    const payload = {
-      text: `CraftQuote Workflow Update`,
-      attachments: [{
-        color: statusColor,
-        fields: [
-          {
-            title: 'Quote Number',
-            value: workflowResult.quoteNumber,
-            short: true
-          },
-          {
-            title: 'Status',
-            value: `${statusEmoji} ${workflowResult.success ? 'Success' : 'Partial Success'}`,
-            short: true
-          },
-          {
-            title: 'Steps Completed',
-            value: workflowResult.steps.filter(s => s.status === 'success').length + '/' + workflowResult.steps.length,
-            short: true
-          }
-        ],
-        footer: 'CraftQuote Automation',
-        ts: Math.floor(Date.now() / 1000)
-      }]
-    };
-    
-    if (workflowResult.dealUrl) {
-      payload.attachments[0].actions = [{
-        type: 'button',
-        text: 'View in Pipedrive',
-        url: workflowResult.dealUrl
-      }];
-    }
-    
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      payload: JSON.stringify(payload)
-    };
-    
-    UrlFetchApp.fetch(webhookUrl, options);
-    Logger.log('📱 Slack notification sent');
-    
-  } catch (error) {
-    Logger.log('❌ Error sending Slack notification: ' + error.toString());
-    throw error;
-  }
 }
 
 /**
