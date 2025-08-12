@@ -284,6 +284,30 @@
             color: #e2e8f0;
         }
 
+        .mode-btn {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .mode-btn:hover {
+            background: #374151;
+            border-color: #60a5fa;
+            color: #e2e8f0;
+        }
+
+        .mode-btn.active {
+            background: #60a5fa;
+            border-color: #60a5fa;
+            color: #ffffff;
+        }
+
         .library-content {
             flex: 1;
             overflow-y: auto;
@@ -697,15 +721,28 @@
                     <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">1300+ components available</span>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; margin: 10px 0;">
-                    <input type="text" class="search-box" placeholder="Search components (PLC, enclosure, VFD, etc.)..." 
+                    <input type="text" class="search-box" placeholder="Search assemblies & components (Motor Control, Safety, PLC, etc.)..." 
                            id="componentSearch" onkeyup="debounceSearch()" 
                            style="flex: 1; padding: 8px 12px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px;">
                     <button onclick="clearSearch()" style="background: #374151; border: 1px solid #475569; color: #9ca3af; padding: 8px; border-radius: 4px; cursor: pointer;">Clear</button>
                 </div>
                 <div class="search-info" id="searchInfo" style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
-                    Type to search through Master Catalog components...
+                    Search assemblies (complete solutions) or individual components...
                 </div>
-                <div class="quick-filters" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;">
+                <div class="mode-selector" style="display: flex; gap: 4px; margin-bottom: 10px;">
+                    <button class="mode-btn active" onclick="switchSearchMode('assemblies')" id="assemblyModeBtn">🔧 Assemblies</button>
+                    <button class="mode-btn" onclick="switchSearchMode('components')" id="componentModeBtn">⚙️ Components</button>
+                </div>
+                
+                <div class="quick-filters" id="assemblyFilters" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <button class="quick-filter" onclick="quickSearchAssembly('Motor Control')">Motor Control</button>
+                    <button class="quick-filter" onclick="quickSearchAssembly('Safety Systems')">Safety</button>
+                    <button class="quick-filter" onclick="quickSearchAssembly('HMI')">HMI Package</button>
+                    <button class="quick-filter" onclick="quickSearchAssembly('Process Control')">Process</button>
+                    <button class="quick-filter" onclick="quickSearchAssembly('Power Distribution')">Power</button>
+                </div>
+                
+                <div class="quick-filters" id="componentFilters" style="display: none; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;">
                     <button class="quick-filter" onclick="quickSearch('PLC')">PLC</button>
                     <button class="quick-filter" onclick="quickSearch('Enclosure')">Enclosure</button>
                     <button class="quick-filter" onclick="quickSearch('VFD')">VFD</button>
@@ -718,10 +755,10 @@
             <div class="library-content" id="libraryContent">
                 <!-- Search results will be displayed here -->
                 <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
-                    <div style="font-size: 1.2em; margin-bottom: 15px;">🔍 Fast Component Search</div>
-                    <div style="margin-bottom: 10px;">Search through 1300+ components from your Master Catalog</div>
-                    <div style="margin-bottom: 15px;">Try: "PLC", "480V", "Enclosure", "VFD", etc.</div>
-                    <div style="font-size: 0.9em; color: #475569;">Click the quick filters above or start typing to search</div>
+                    <div style="font-size: 1.2em; margin-bottom: 15px;">� Assembly-First Quote Building</div>
+                    <div style="margin-bottom: 10px;">Start with complete assemblies, then drill down to components</div>
+                    <div style="margin-bottom: 15px;">Try: "Motor Control", "Safety Systems", "HMI Package", etc.</div>
+                    <div style="font-size: 0.9em; color: #475569;">Click assembly filters above or search for specific solutions</div>
                 </div>
             </div>
         </div>
@@ -772,7 +809,14 @@
         // Debounced search to avoid excessive API calls
         function debounceSearch() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performComponentSearch, 300); // Wait 300ms after user stops typing
+            searchTimeout = setTimeout(() => {
+                const currentMode = document.getElementById('assemblyModeBtn').classList.contains('active') ? 'assemblies' : 'components';
+                if (currentMode === 'assemblies') {
+                    performAssemblySearch();
+                } else {
+                    performComponentSearch();
+                }
+            }, 300); // Wait 300ms after user stops typing
         }
 
         // Fast component search function
@@ -884,16 +928,366 @@
         // Clear search
         function clearSearch() {
             document.getElementById('componentSearch').value = '';
-            document.getElementById('searchInfo').textContent = 'Type to search through Master Catalog components...';
-            document.getElementById('libraryContent').innerHTML = `
-                <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
-                    <div style="font-size: 1.2em; margin-bottom: 15px;">🔍 Fast Component Search</div>
-                    <div style="margin-bottom: 10px;">Search through 1300+ components from your Master Catalog</div>
-                    <div style="margin-bottom: 15px;">Try: "PLC", "480V", "Enclosure", "VFD", etc.</div>
-                    <div style="font-size: 0.9em; color: #475569;">Click the quick filters above or start typing to search</div>
+            const currentMode = document.getElementById('assemblyModeBtn').classList.contains('active') ? 'assemblies' : 'components';
+            
+            if (currentMode === 'assemblies') {
+                document.getElementById('searchInfo').textContent = 'Search assemblies (complete solutions) or individual components...';
+                document.getElementById('libraryContent').innerHTML = `
+                    <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
+                        <div style="font-size: 1.2em; margin-bottom: 15px;">🔧 Assembly-First Quote Building</div>
+                        <div style="margin-bottom: 10px;">Start with complete assemblies, then drill down to components</div>
+                        <div style="margin-bottom: 15px;">Try: "Motor Control", "Safety Systems", "HMI Package", etc.</div>
+                        <div style="font-size: 0.9em; color: #475569;">Click assembly filters above or search for specific solutions</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('searchInfo').textContent = 'Type to search through Master Catalog components...';
+                document.getElementById('libraryContent').innerHTML = `
+                    <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
+                        <div style="font-size: 1.2em; margin-bottom: 15px;">🔍 Fast Component Search</div>
+                        <div style="margin-bottom: 10px;">Search through 1300+ components from your Master Catalog</div>
+                        <div style="margin-bottom: 15px;">Try: "PLC", "480V", "Enclosure", "VFD", etc.</div>
+                        <div style="font-size: 0.9em; color: #475569;">Click the quick filters above or start typing to search</div>
+                    </div>
+                `;
+            }
+        }
+
+        // ============== ASSEMBLY-BASED SEARCH FUNCTIONS ==============
+
+        // Switch between assembly and component search modes
+        function switchSearchMode(mode) {
+            const assemblyBtn = document.getElementById('assemblyModeBtn');
+            const componentBtn = document.getElementById('componentModeBtn');
+            const assemblyFilters = document.getElementById('assemblyFilters');
+            const componentFilters = document.getElementById('componentFilters');
+            
+            if (mode === 'assemblies') {
+                assemblyBtn.classList.add('active');
+                componentBtn.classList.remove('active');
+                assemblyFilters.style.display = 'flex';
+                componentFilters.style.display = 'none';
+                document.getElementById('searchInfo').textContent = 'Search assemblies (complete solutions)...';
+            } else {
+                componentBtn.classList.add('active');
+                assemblyBtn.classList.remove('active');
+                componentFilters.style.display = 'flex';
+                assemblyFilters.style.display = 'none';
+                document.getElementById('searchInfo').textContent = 'Search individual components...';
+            }
+            
+            clearSearch();
+        }
+
+        // Quick search for assemblies
+        function quickSearchAssembly(category) {
+            const searchBox = document.getElementById('componentSearch');
+            if (searchBox) {
+                searchBox.value = category;
+                performAssemblySearch();
+            }
+        }
+
+        // Perform assembly search
+        function performAssemblySearch() {
+            const searchTerm = document.getElementById('componentSearch').value.trim();
+            const searchInfo = document.getElementById('searchInfo');
+            const libraryContent = document.getElementById('libraryContent');
+            
+            if (searchTerm.length < 2) {
+                clearSearch();
+                return;
+            }
+            
+            searchInfo.innerHTML = `🔧 Searching assemblies for "${searchTerm}"...`;
+            libraryContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <div style="margin-bottom: 10px;">🔧 Searching Assembly Database...</div>
+                    <div style="font-size: 0.9em;">Finding complete solutions matching "${searchTerm}"</div>
                 </div>
             `;
+            
+            // Call backend for assembly search
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('✅ Assembly search results:', result);
+                        displayAssemblyResults(result, searchTerm);
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('❌ Assembly search error:', error);
+                        loadMockAssemblyResults(searchTerm);
+                    })
+                    .searchAssembliesForQuoteBuilder(searchTerm);
+            } else {
+                console.log('⚠️ Google script not available, using mock assembly results');
+                setTimeout(() => loadMockAssemblyResults(searchTerm), 500);
+            }
         }
+
+        // Display assembly search results
+        function displayAssemblyResults(result, searchTerm) {
+            const searchInfo = document.getElementById('searchInfo');
+            const libraryContent = document.getElementById('libraryContent');
+            
+            if (!result.success || !result.results || result.results.length === 0) {
+                searchInfo.textContent = `No assemblies found for "${searchTerm}"`;
+                libraryContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="margin-bottom: 10px;">🔍 No assemblies found</div>
+                        <div style="font-size: 0.9em; margin-bottom: 15px;">Try searching for: Motor Control, Safety, HMI, Process Control</div>
+                        <button onclick="switchSearchMode('components')" style="padding: 8px 16px; background: #1e293b; border: 1px solid #475569; color: #e2e8f0; border-radius: 4px; cursor: pointer;">Search Individual Components</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            searchInfo.textContent = `Found ${result.results.length} assemblies matching "${searchTerm}"`;
+            
+            let html = '<div class="search-results" style="display: grid; gap: 12px;">';
+            
+            result.results.forEach(assembly => {
+                html += `
+                    <div class="assembly-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <h4 style="color: #60a5fa; margin-bottom: 4px; font-size: 16px;">${assembly.name}</h4>
+                                <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">${assembly.category}</div>
+                                <div style="color: #cbd5e1; font-size: 14px;">${assembly.description}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #10b981; font-weight: 600; font-size: 16px;">$${assembly.totalCost.toLocaleString()}</div>
+                                <div style="color: #64748b; font-size: 12px;">${assembly.componentCount} components</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="expandAssembly('${assembly.id}')" 
+                                    style="flex: 1; padding: 8px; background: #374151; border: 1px solid #475569; color: #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                                🔍 View Components
+                            </button>
+                            <button onclick="addAssemblyToQuote('${assembly.id}', '${encodeURIComponent(JSON.stringify(assembly))}')" 
+                                    style="flex: 1; padding: 8px; background: #059669; border: 1px solid #065f46; color: white; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                                ➕ Add Assembly
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            libraryContent.innerHTML = html;
+        }
+
+        // Load mock assembly results for testing
+        function loadMockAssemblyResults(searchTerm) {
+            const mockAssemblies = {
+                success: true,
+                results: [
+                    {
+                        id: 'MOTOR_CONTROL_BASIC',
+                        name: 'Basic Motor Control Assembly',
+                        category: 'Motor Control',
+                        description: 'Complete motor control solution with contactors, overloads, and disconnect',
+                        componentCount: 8,
+                        totalCost: 450,
+                        components: [
+                            { id: 'CONT_25A', name: '25A 3-Pole Contactor', cost: 85 },
+                            { id: 'OL_16-25A', name: 'Overload Relay 16-25A', cost: 95 }
+                        ]
+                    },
+                    {
+                        id: 'SAFETY_CIRCUIT',
+                        name: 'Safety Circuit Assembly',
+                        category: 'Safety Systems',
+                        description: 'Complete safety circuit with E-stops, light curtains, and safety relay',
+                        componentCount: 6,
+                        totalCost: 680,
+                        components: [
+                            { id: 'SAFETY_RELAY', name: 'Safety Relay Module', cost: 245 },
+                            { id: 'ESTOP_40MM', name: '40mm E-Stop Button', cost: 35 }
+                        ]
+                    }
+                ]
+            };
+            
+            // Filter based on search term
+            mockAssemblies.results = mockAssemblies.results.filter(assembly => 
+                assembly.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                assembly.category.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            displayAssemblyResults(mockAssemblies, searchTerm);
+        }
+
+        // Expand assembly to show all components
+        function expandAssembly(assemblyId) {
+            const libraryContent = document.getElementById('libraryContent');
+            
+            libraryContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <div style="margin-bottom: 10px;">🔧 Loading assembly details...</div>
+                    <div style="font-size: 0.9em;">Fetching component breakdown for ${assemblyId}</div>
+                </div>
+            `;
+            
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        displayAssemblyDetails(result);
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('❌ Error loading assembly details:', error);
+                        displayMockAssemblyDetails(assemblyId);
+                    })
+                    .expandAssemblyForQuoteBuilder(assemblyId);
+            } else {
+                setTimeout(() => displayMockAssemblyDetails(assemblyId), 500);
+            }
+        }
+
+        // Display detailed assembly breakdown
+        function displayAssemblyDetails(result) {
+            const libraryContent = document.getElementById('libraryContent');
+            
+            if (!result.success) {
+                libraryContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <div>❌ Failed to load assembly details</div>
+                        <button onclick="clearSearch()" style="margin-top: 15px; padding: 8px 16px; background: #1e293b; border: 1px solid #475569; color: #e2e8f0; border-radius: 4px; cursor: pointer;">Back to Search</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const assembly = result.assembly;
+            let html = `
+                <div class="assembly-details" style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                        <div>
+                            <h3 style="color: #60a5fa; margin-bottom: 8px;">${assembly.name}</h3>
+                            <div style="color: #94a3b8; margin-bottom: 4px;">${assembly.category}</div>
+                            <div style="color: #cbd5e1; font-size: 14px;">${assembly.description}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #10b981; font-weight: 600; font-size: 18px;">$${assembly.totalCost.toLocaleString()}</div>
+                            <div style="color: #64748b; font-size: 13px;">${assembly.componentCount} components total</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                        <button onclick="addAssemblyToQuote('${assembly.id}', '${encodeURIComponent(JSON.stringify(assembly))}')" 
+                                style="padding: 10px 20px; background: #059669; border: 1px solid #065f46; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                            ➕ Add Complete Assembly
+                        </button>
+                        <button onclick="clearSearch()" 
+                                style="padding: 10px 20px; background: #374151; border: 1px solid #475569; color: #e2e8f0; border-radius: 6px; cursor: pointer;">
+                            ← Back to Search
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <h4 style="color: #60a5fa; margin-bottom: 12px;">📋 Component Breakdown:</h4>
+                </div>
+                
+                <div class="component-list" style="display: grid; gap: 8px;">
+            `;
+            
+            assembly.components.forEach(component => {
+                html += `
+                    <div class="component-item" style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="color: #e2e8f0; font-weight: 500; margin-bottom: 4px;">${component.name}</div>
+                            ${component.partNumber ? `<div style="color: #94a3b8; font-size: 13px; margin-bottom: 2px;">P/N: ${component.partNumber}</div>` : ''}
+                            ${component.specifications ? `<div style="color: #64748b; font-size: 12px;">${formatSpecifications(component.specifications)}</div>` : ''}
+                        </div>
+                        <div style="text-align: right; margin-left: 16px;">
+                            <div style="color: #10b981; font-weight: 500;">$${component.cost.toLocaleString()}</div>
+                            <button onclick="addComponentToQuote('${component.id}', '${encodeURIComponent(JSON.stringify(component))}')" 
+                                    style="margin-top: 4px; padding: 4px 8px; background: #374151; border: 1px solid #475569; color: #e2e8f0; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                                Add Individual
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            libraryContent.innerHTML = html;
+        }
+
+        // Mock assembly details for testing
+        function displayMockAssemblyDetails(assemblyId) {
+            const mockAssembly = {
+                success: true,
+                assembly: {
+                    id: 'MOTOR_CONTROL_BASIC',
+                    name: 'Basic Motor Control Assembly',
+                    category: 'Motor Control',
+                    description: 'Complete motor control solution with contactors, overloads, and disconnect',
+                    componentCount: 8,
+                    totalCost: 450,
+                    components: [
+                        { id: 'CONT_25A', name: '25A 3-Pole Contactor', cost: 85, partNumber: 'SQD-8910DPA23V09', specifications: { voltage: '480V', phase: '3', amps: '25A' } },
+                        { id: 'OL_16-25A', name: 'Overload Relay 16-25A', cost: 95, partNumber: 'SQD-LRD325', specifications: { range: '16-25A', voltage: '480V' } },
+                        { id: 'DISC_30A', name: '30A Disconnect Switch', cost: 120, partNumber: 'SQD-H321N', specifications: { amps: '30A', poles: '3' } },
+                        { id: 'FUSE_25A', name: '25A Fuses (3)', cost: 45, partNumber: 'FERR-A25X3', specifications: { amps: '25A', type: 'Fast-Acting' } }
+                    ]
+                }
+            };
+            
+            displayAssemblyDetails(mockAssembly);
+        }
+
+        // Add assembly to quote
+        function addAssemblyToQuote(assemblyId, assemblyDataEncoded) {
+            try {
+                const assemblyData = JSON.parse(decodeURIComponent(assemblyDataEncoded));
+                
+                // Add assembly as a group to quote data
+                quoteData.components.push({
+                    id: assemblyData.id,
+                    name: assemblyData.name,
+                    description: `${assemblyData.description} (${assemblyData.componentCount} components)`,
+                    price: assemblyData.totalCost,
+                    quantity: 1,
+                    category: assemblyData.category,
+                    type: 'assembly',
+                    components: assemblyData.components || []
+                });
+                
+                // Update the interface
+                updateQuoteDisplay();
+                
+                console.log(`✅ Added ${assemblyData.name} assembly to quote`);
+                
+                // Show success message briefly
+                const searchInfo = document.getElementById('searchInfo');
+                const originalText = searchInfo.textContent;
+                searchInfo.innerHTML = `✅ Added "${assemblyData.name}" to quote!`;
+                setTimeout(() => {
+                    searchInfo.textContent = originalText;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('❌ Error adding assembly to quote:', error);
+                alert('Error adding assembly to quote. Please try again.');
+            }
+        }
+
+        // Helper function to format specifications
+        function formatSpecifications(specs) {
+            if (!specs) return '';
+            const parts = [];
+            if (specs.voltage) parts.push(specs.voltage);
+            if (specs.phase) parts.push(specs.phase + ' Phase');
+            if (specs.amps) parts.push(specs.amps);
+            if (specs.range) parts.push(specs.range);
+            if (specs.poles) parts.push(specs.poles + ' Pole');
+            if (specs.type) parts.push(specs.type);
+            return parts.join(' • ');
+        }
+
+        // ============== END ASSEMBLY FUNCTIONS ==============
 
         // Mock search results for testing
         function loadMockResults(searchTerm) {
