@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CraftQuote Branding Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .editor-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: #2d2d2d;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #374151;
+        }
+
+        .preview-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .editor-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .editor-header h1 {
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .editor-section {
+            margin-bottom: 30px;
+            background: #374151;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .editor-section h3 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #d1d5db;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .color-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-input input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .color-input input[type="text"] {
+            flex: 1;
+        }
+
+        .icon-selector {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .icon-option {
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .icon-option:hover {
+            background: #4a90e2;
+            border-color: #4a90e2;
+        }
+
+        .icon-option.selected {
+            background: #4a90e2;
+            border-color: #4a90e2;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .preview-card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .preview-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .preview-tagline {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .color-swatch {
+            height: 80px;
+            border-radius: 8px;
+            display: flex;
+            align-items: end;
+            padding: 10px;
+            color: white;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .product-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .category-card {
+            background: #374151;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .category-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .category-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .category-desc {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .success-message {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #ef4444;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible::before {
+            content: '▼';
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .collapsible.collapsed::before {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Sidebar Editor -->
+        <div class="sidebar">
+            <div class="editor-header">
+                <h1>🎨 Branding Editor</h1>
+                <p>Customize your CraftQuote appearance</p>
+            </div>
+
+            <div id="success-message" class="success-message">
+                Settings saved successfully!
+            </div>
+
+            <div id="error-message" class="error-message">
+                Error saving settings. Please try again.
+            </div>
+
+            <!-- Application Identity -->
+            <div class="editor-section">
+                <h3 class="collapsible" data-target="app-identity">
+                    📱 Application Identity
+                </h3>
+                <div id="app-identity" class="collapsible-content">
+                    <div class="form-group">
+                        <label for="appName">Application Name</label>
+                        <input type="text" id="appName" value="CraftQuote">
+                    </div>
+                    <div class="form-group">
+                        <label for="appTagline">Tagline</label>
+                        <input type="text" id="appTagline" value="Professional Automation Quote Builder">
+                    </div>
+                    <div class="form-group">
+                        <label for="appIcon">App Icon</label>
+                        <input type="text" id="appIcon" value="🔧" maxlength="2">
+                        <div class="icon-selector">
+                            <div class="icon-option" data-icon="🔧">🔧</div>
+                            <div class="icon-option" data-icon="⚙️">⚙️</div>
+                            <div class="icon-option" data-icon="🏭">🏭</div>
+                            <div class="icon-option" data-icon="🤖">🤖</div>
+                            <div class="icon-option" data-icon="📋">📋</div>
+                            <div class="icon-option" data-icon="💼">💼</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="companyName">Company Name</label>
+                        <input type="text" id="companyName" value="Craft Automation Systems">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Scheme -->
+            <div class="editor-section">
+                <h3 class="collapsible" data-target="color-scheme">
+                    🎨 Color Scheme
+                </h3>
+                <div id="color-scheme" class="collapsible-content">
+                    <div class="form-group">
+                        <label for="primaryColor">Primary Color</label>
+                        <div class="color-input">
+                            <input type="color" id="primaryColor" value="#4a90e2">
+                            <input type="text" id="primaryColorHex" value="#4a90e2">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="secondaryColor">Secondary Color</label>
+                        <div class="color-input">
+                            <input type="color" id="secondaryColor" value="#60a5fa">
+                            <input type="text" id="secondaryColorHex" value="#60a5fa">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="accentColor">Accent Color</label>
+                        <div class="color-input">
+                            <input type="color" id="accentColor" value="#10b981">
+                            <input type="text" id="accentColorHex" value="#10b981">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="successColor">Success Color</label>
+                        <div class="color-input">
+                            <input type="color" id="successColor" value="#22c55e">
+                            <input type="text" id="successColorHex" value="#22c55e">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="warningColor">Warning Color</label>
+                        <div class="color-input">
+                            <input type="color" id="warningColor" value="#f59e0b">
+                            <input type="text" id="warningColorHex" value="#f59e0b">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dangerColor">Danger Color</label>
+                        <div class="color-input">
+                            <input type="color" id="dangerColor" value="#ef4444">
+                            <input type="text" id="dangerColorHex" value="#ef4444">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Categories -->
+            <div class="editor-section">
+                <h3 class="collapsible" data-target="product-categories">
+                    🏭 Product Categories
+                </h3>
+                <div id="product-categories" class="collapsible-content">
+                    <div class="form-group">
+                        <label for="bhacIcon">BHAC Icon</label>
+                        <input type="text" id="bhacIcon" value="🍺" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="dtacIcon">DTAC Icon</label>
+                        <input type="text" id="dtacIcon" value="🥃" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="cpacIcon">CPAC Icon</label>
+                        <input type="text" id="cpacIcon" value="🧽" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="ghacIcon">GHAC Icon</label>
+                        <input type="text" id="ghacIcon" value="🌾" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="agacIcon">AGAC Icon</label>
+                        <input type="text" id="agacIcon" value="🌾" maxlength="2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Icons -->
+            <div class="editor-section">
+                <h3 class="collapsible collapsed" data-target="action-icons">
+                    ⚡ Action Icons
+                </h3>
+                <div id="action-icons" class="collapsible-content collapsed">
+                    <div class="form-group">
+                        <label for="addIcon">Add Icon</label>
+                        <input type="text" id="addIcon" value="➕" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="removeIcon">Remove Icon</label>
+                        <input type="text" id="removeIcon" value="❌" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="editIcon">Edit Icon</label>
+                        <input type="text" id="editIcon" value="✏️" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="saveIcon">Save Icon</label>
+                        <input type="text" id="saveIcon" value="💾" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="generateIcon">Generate Icon</label>
+                        <input type="text" id="generateIcon" value="✨" maxlength="2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn" onclick="saveConfiguration()">💾 Save Changes</button>
+                <button class="btn btn-secondary" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
+                <button class="btn btn-secondary" onclick="exportConfiguration()">📤 Export Config</button>
+            </div>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="preview-area">
+            <div class="preview-card">
+                <div class="preview-header">
+                    <div class="preview-title" id="previewTitle">
+                        <span id="previewIcon">🔧</span>
+                        <span id="previewName">CraftQuote</span>
+                    </div>
+                    <div class="preview-tagline" id="previewTagline">
+                        Professional Automation Quote Builder
+                    </div>
+                </div>
+
+                <h4>Color Palette</h4>
+                <div class="color-palette" id="colorPalette">
+                    <div class="color-swatch" id="primarySwatch" style="background: #4a90e2;">Primary</div>
+                    <div class="color-swatch" id="secondarySwatch" style="background: #60a5fa;">Secondary</div>
+                    <div class="color-swatch" id="accentSwatch" style="background: #10b981;">Accent</div>
+                    <div class="color-swatch" id="successSwatch" style="background: #22c55e;">Success</div>
+                    <div class="color-swatch" id="warningSwatch" style="background: #f59e0b;">Warning</div>
+                    <div class="color-swatch" id="dangerSwatch" style="background: #ef4444;">Danger</div>
+                </div>
+
+                <h4>Product Categories</h4>
+                <div class="product-categories" id="productCategories">
+                    <div class="category-card">
+                        <span class="category-icon" id="previewBhacIcon">🍺</span>
+                        <div class="category-name">BHAC</div>
+                        <div class="category-desc">Brewery Automated Control</div>
+                    </div>
+                    <div class="category-card">
+                        <span class="category-icon" id="previewDtacIcon">🥃</span>
+                        <div class="category-name">DTAC</div>
+                        <div class="category-desc">Distillery Temperature Control</div>
+                    </div>
+                    <div class="category-card">
+                        <span class="category-icon" id="previewCpacIcon">🧽</span>
+                        <div class="category-name">CPAC</div>
+                        <div class="category-desc">CIP Automated Control</div>
+                    </div>
+                    <div class="category-card">
+                        <span class="category-icon" id="previewGhacIcon">🌾</span>
+                        <div class="category-name">GHAC</div>
+                        <div class="category-desc">Grain Handling Control</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize collapsible sections
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCollapsibles();
+            setupColorInputs();
+            setupIconSelectors();
+            setupRealTimePreview();
+            loadCurrentConfiguration();
+        });
+
+        function initializeCollapsibles() {
+            document.querySelectorAll('.collapsible').forEach(header => {
+                header.addEventListener('click', function() {
+                    const target = document.getElementById(this.dataset.target);
+                    const isCollapsed = this.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
+                        this.classList.remove('collapsed');
+                        target.classList.remove('collapsed');
+                        target.style.maxHeight = target.scrollHeight + 'px';
+                    } else {
+                        this.classList.add('collapsed');
+                        target.classList.add('collapsed');
+                        target.style.maxHeight = '0px';
+                    }
+                });
+            });
+        }
+
+        function setupColorInputs() {
+            const colorInputs = [
+                { color: 'primaryColor', hex: 'primaryColorHex' },
+                { color: 'secondaryColor', hex: 'secondaryColorHex' },
+                { color: 'accentColor', hex: 'accentColorHex' },
+                { color: 'successColor', hex: 'successColorHex' },
+                { color: 'warningColor', hex: 'warningColorHex' },
+                { color: 'dangerColor', hex: 'dangerColorHex' }
+            ];
+
+            colorInputs.forEach(input => {
+                const colorPicker = document.getElementById(input.color);
+                const hexInput = document.getElementById(input.hex);
+
+                colorPicker.addEventListener('input', function() {
+                    hexInput.value = this.value;
+                    updatePreview();
+                });
+
+                hexInput.addEventListener('input', function() {
+                    if (this.value.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
+                        colorPicker.value = this.value;
+                        updatePreview();
+                    }
+                });
+            });
+        }
+
+        function setupIconSelectors() {
+            document.querySelectorAll('.icon-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const icon = this.dataset.icon;
+                    const appIconInput = document.getElementById('appIcon');
+                    appIconInput.value = icon;
+                    
+                    // Update selection
+                    document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    updatePreview();
+                });
+            });
+        }
+
+        function setupRealTimePreview() {
+            // App identity inputs
+            ['appName', 'appTagline', 'appIcon', 'companyName'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreview);
+            });
+
+            // Product category icons
+            ['bhacIcon', 'dtacIcon', 'cpacIcon', 'ghacIcon', 'agacIcon'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreview);
+            });
+        }
+
+        function updatePreview() {
+            // Update app identity
+            const appName = document.getElementById('appName').value;
+            const appTagline = document.getElementById('appTagline').value;
+            const appIcon = document.getElementById('appIcon').value;
+
+            document.getElementById('previewName').textContent = appName;
+            document.getElementById('previewTagline').textContent = appTagline;
+            document.getElementById('previewIcon').textContent = appIcon;
+
+            // Update color swatches
+            document.getElementById('primarySwatch').style.background = document.getElementById('primaryColor').value;
+            document.getElementById('secondarySwatch').style.background = document.getElementById('secondaryColor').value;
+            document.getElementById('accentSwatch').style.background = document.getElementById('accentColor').value;
+            document.getElementById('successSwatch').style.background = document.getElementById('successColor').value;
+            document.getElementById('warningSwatch').style.background = document.getElementById('warningColor').value;
+            document.getElementById('dangerSwatch').style.background = document.getElementById('dangerColor').value;
+
+            // Update product category icons
+            document.getElementById('previewBhacIcon').textContent = document.getElementById('bhacIcon').value;
+            document.getElementById('previewDtacIcon').textContent = document.getElementById('dtacIcon').value;
+            document.getElementById('previewCpacIcon').textContent = document.getElementById('cpacIcon').value;
+            document.getElementById('previewGhacIcon').textContent = document.getElementById('ghacIcon').value;
+        }
+
+        function loadCurrentConfiguration() {
+            // This would load from Google Apps Script in the real implementation
+            console.log('Loading current configuration...');
+        }
+
+        function saveConfiguration() {
+            const config = gatherConfiguration();
+            
+            // In a real implementation, this would call Google Apps Script
+            console.log('Saving configuration:', config);
+            
+            // Show success message
+            showMessage('success', 'Configuration saved successfully!');
+        }
+
+        function gatherConfiguration() {
+            return {
+                app: {
+                    name: document.getElementById('appName').value,
+                    tagline: document.getElementById('appTagline').value,
+                    icon: document.getElementById('appIcon').value,
+                    company: document.getElementById('companyName').value
+                },
+                colors: {
+                    primary: document.getElementById('primaryColor').value,
+                    secondary: document.getElementById('secondaryColor').value,
+                    accent: document.getElementById('accentColor').value,
+                    success: document.getElementById('successColor').value,
+                    warning: document.getElementById('warningColor').value,
+                    danger: document.getElementById('dangerColor').value
+                },
+                productIcons: {
+                    bhac: document.getElementById('bhacIcon').value,
+                    dtac: document.getElementById('dtacIcon').value,
+                    cpac: document.getElementById('cpacIcon').value,
+                    ghac: document.getElementById('ghacIcon').value,
+                    agac: document.getElementById('agacIcon').value
+                },
+                actionIcons: {
+                    add: document.getElementById('addIcon').value,
+                    remove: document.getElementById('removeIcon').value,
+                    edit: document.getElementById('editIcon').value,
+                    save: document.getElementById('saveIcon').value,
+                    generate: document.getElementById('generateIcon').value
+                }
+            };
+        }
+
+        function resetToDefaults() {
+            if (confirm('Reset all settings to default values? This cannot be undone.')) {
+                location.reload();
+            }
+        }
+
+        function exportConfiguration() {
+            const config = gatherConfiguration();
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'craftquote-branding-config.json';
+            link.click();
+        }
+
+        function showMessage(type, message) {
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            
+            if (type === 'success') {
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+                errorMsg.style.display = 'none';
+                setTimeout(() => successMsg.style.display = 'none', 3000);
+            } else {
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+                setTimeout(() => errorMsg.style.display = 'none', 3000);
+            }
+        }
+    </script>
+</body>
+</html>

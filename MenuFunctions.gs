@@ -1,4 +1,23 @@
-function onOpen() {
+fu  ui.createMenu('🔧 Component Assembler')
+    .addItem('Open Hybrid Quote Builder', 'openHybridAssembler')
+    .addSeparator()
+    .addSubMenu(ui.createMenu('🏗️ System Builder')
+      .addItem('🎛️ Open Assembly Editor', 'openAssemblyEditor')
+      .addItem('🗂️ Initialize System Database', 'initializeHybridSystem')
+      .addItem('📊 View All Assemblies', 'showAssemblyManager'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('🎨 Branding & Customization')
+      .addItem('🎨 Open Branding Editor', 'openBrandingEditor')
+      .addItem('🎯 Apply Current Branding', 'applyCurrentBranding')
+      .addItem('📋 Export Branding Config', 'exportBrandingConfig')
+      .addItem('📥 Import Branding Config', 'importBrandingConfig')
+      .addItem('🔄 Reset to Default Branding', 'resetBrandingToDefaults'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('📦 Master Catalog Setup')
+      .addItem('🚀 Populate ALL Template Components', 'populateMasterCatalogForTemplates')
+      .addItem('🧪 Populate BHAC Components Only', 'populateBHACComponents')
+      .addItem('🔍 Debug Master Catalog', 'testMasterCatalogDebug')
+      .addItem('🔧 Test Component Lookup', 'testComponentLookup'))() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('🔧 Component Assembler')
     .addItem('Open Hybrid Quote Builder', 'openHybridAssembler')
@@ -23,6 +42,164 @@ function onOpen() {
     .addItem('🆘 FORCE REAL DATA HTML', 'forceRealDataHTML')
     .addToUi();
   console.log('🎯 ON OPEN - Menu created successfully with Assembly Editor access');
+}
+
+// =================== BRANDING EDITOR FUNCTIONS ===================
+
+/**
+ * Open the Branding Editor interface
+ */
+function openBrandingEditor() {
+  try {
+    console.log('🎨 Opening Branding Editor...');
+    
+    const html = HtmlService.createHtmlOutputFromFile('BrandingEditor')
+      .setWidth(1400)
+      .setHeight(900)
+      .setTitle('🎨 CraftQuote Branding Editor');
+    
+    SpreadsheetApp.getUi().showModalDialog(html, 'Branding Editor');
+    
+  } catch (error) {
+    console.error('🚨 Branding Editor Error:', error);
+    SpreadsheetApp.getUi().alert('Error opening Branding Editor: ' + error.toString());
+  }
+}
+
+/**
+ * Apply current branding configuration to main system
+ */
+function applyCurrentBranding() {
+  try {
+    const config = loadCustomBrandingConfig();
+    
+    let message = `🎨 Current Branding Applied!\n\n`;
+    message += `App Name: ${config.app.name}\n`;
+    message += `Primary Color: ${config.colors.primary}\n`;
+    message += `Company: ${config.app.company}\n\n`;
+    message += `All templates will now use this branding.`;
+    
+    SpreadsheetApp.getUi().alert('Branding Applied', message, SpreadsheetApp.getUi().ButtonSet.OK);
+    
+  } catch (error) {
+    SpreadsheetApp.getUi().alert('Error applying branding: ' + error.toString());
+  }
+}
+
+/**
+ * Export branding configuration to downloadable file
+ */
+function exportBrandingConfig() {
+  try {
+    const config = loadCustomBrandingConfig();
+    const configJSON = JSON.stringify(config, null, 2);
+    
+    // Create a temporary sheet with the config
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let tempSheet = ss.getSheetByName('BrandingExport_TEMP');
+    
+    if (!tempSheet) {
+      tempSheet = ss.insertSheet('BrandingExport_TEMP');
+    }
+    
+    tempSheet.clear();
+    tempSheet.getRange(1, 1).setValue('CraftQuote Branding Configuration Export');
+    tempSheet.getRange(2, 1).setValue('Copy the JSON below to save your configuration:');
+    tempSheet.getRange(3, 1).setValue(configJSON);
+    
+    // Auto-resize and format
+    tempSheet.autoResizeColumns(1, 1);
+    tempSheet.getRange(1, 1).setFontWeight('bold');
+    tempSheet.getRange(3, 1).setWrap(true);
+    tempSheet.setRowHeight(3, 500);
+    
+    SpreadsheetApp.setActiveSheet(tempSheet);
+    
+    SpreadsheetApp.getUi().alert(
+      'Configuration Exported',
+      'Your branding configuration has been exported to the "BrandingExport_TEMP" sheet.\n\nCopy the JSON from cell A3 to save your configuration.',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+    
+  } catch (error) {
+    SpreadsheetApp.getUi().alert('Export Error: ' + error.toString());
+  }
+}
+
+/**
+ * Import branding configuration from user input
+ */
+function importBrandingConfig() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    const result = ui.prompt(
+      'Import Branding Configuration',
+      'Paste your JSON configuration below:',
+      ui.ButtonSet.OK_CANCEL
+    );
+    
+    if (result.getSelectedButton() === ui.Button.OK) {
+      const configText = result.getResponseText();
+      
+      try {
+        const config = JSON.parse(configText);
+        const saveResult = saveBrandingConfig(config);
+        
+        if (saveResult.success) {
+          ui.alert('Configuration Imported', 'Your branding configuration has been imported successfully!', ui.ButtonSet.OK);
+        } else {
+          ui.alert('Import Error', 'Failed to save configuration: ' + saveResult.error, ui.ButtonSet.OK);
+        }
+        
+      } catch (jsonError) {
+        ui.alert('Import Error', 'Invalid JSON format. Please check your configuration and try again.', ui.ButtonSet.OK);
+      }
+    }
+    
+  } catch (error) {
+    SpreadsheetApp.getUi().alert('Import Error: ' + error.toString());
+  }
+}
+
+/**
+ * Reset branding to default values
+ */
+function resetBrandingToDefaults() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    const result = ui.alert(
+      'Reset Branding',
+      'This will reset all branding settings to default values. This cannot be undone.\n\nAre you sure you want to continue?',
+      ui.ButtonSet.YES_NO
+    );
+    
+    if (result === ui.Button.YES) {
+      // Delete the custom branding sheet
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const brandingSheet = ss.getSheetByName('BrandingConfig');
+      
+      if (brandingSheet) {
+        ss.deleteSheet(brandingSheet);
+      }
+      
+      ui.alert('Branding Reset', 'All branding settings have been reset to default values.', ui.ButtonSet.OK);
+    }
+    
+  } catch (error) {
+    SpreadsheetApp.getUi().alert('Reset Error: ' + error.toString());
+  }
+}
+
+/**
+ * Get branding configuration for use in HTML templates
+ */
+function getBrandingForHTML() {
+  try {
+    return loadCustomBrandingConfig();
+  } catch (error) {
+    console.error('Error loading branding for HTML:', error);
+    return getBrandingConfig(); // Return defaults
+  }
 }
 
 function forceRealDataHTML() {
