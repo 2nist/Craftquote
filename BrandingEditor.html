@@ -615,18 +615,129 @@
         }
 
         function loadCurrentConfiguration() {
-            // This would load from Google Apps Script in the real implementation
-            console.log('Loading current configuration...');
+            console.log('🔄 Loading current configuration from Google Sheets...');
+            
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function(config) {
+                        console.log('✅ Configuration loaded:', config);
+                        applyConfigurationToEditor(config);
+                        updatePreview();
+                        showMessage('success', 'Configuration loaded successfully!');
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('❌ Error loading configuration:', error);
+                        showMessage('error', 'Failed to load configuration: ' + error.message);
+                    })
+                    .getBrandingForHTML();
+            } else {
+                console.log('⚠️ Google Apps Script not available, using default configuration');
+                showMessage('error', 'Not connected to Google Apps Script');
+            }
         }
 
         function saveConfiguration() {
             const config = gatherConfiguration();
+            console.log('💾 Saving configuration to Google Sheets:', config);
             
-            // In a real implementation, this would call Google Apps Script
-            console.log('Saving configuration:', config);
+            if (typeof google !== 'undefined' && google.script) {
+                // Show loading state
+                const saveBtn = document.querySelector('button[onclick="saveConfiguration()"]');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '⏳ Saving...';
+                saveBtn.disabled = true;
+                
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('✅ Configuration saved:', result);
+                        showMessage('success', result.message || 'Configuration saved successfully!');
+                        
+                        // Reset button
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
+                        
+                        // Trigger sync to other systems
+                        syncToExternalSystems(config);
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('❌ Error saving configuration:', error);
+                        showMessage('error', 'Failed to save configuration: ' + error.message);
+                        
+                        // Reset button
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
+                    })
+                    .saveBrandingFromHTML(config);
+            } else {
+                console.log('⚠️ Google Apps Script not available, saving locally only');
+                localStorage.setItem('craftquote-branding', JSON.stringify(config));
+                showMessage('success', 'Configuration saved locally (Google Sheets not available)');
+            }
+        }
+
+        function applyConfigurationToEditor(config) {
+            // Apply app settings
+            if (config.app) {
+                document.getElementById('appName').value = config.app.name || 'CraftQuote';
+                document.getElementById('appTagline').value = config.app.tagline || 'Professional Automation Quote Builder';
+                document.getElementById('appIcon').value = config.app.icon || '🔧';
+                document.getElementById('companyName').value = config.app.company || 'Craft Automation Systems';
+            }
             
-            // Show success message
-            showMessage('success', 'Configuration saved successfully!');
+            // Apply colors
+            if (config.colors) {
+                Object.entries(config.colors).forEach(([key, value]) => {
+                    const colorInput = document.getElementById(key + 'Color');
+                    const hexInput = document.getElementById(key + 'ColorHex');
+                    if (colorInput && value) {
+                        colorInput.value = value;
+                        if (hexInput) hexInput.value = value;
+                    }
+                });
+            }
+            
+            // Apply product icons
+            if (config.productCategories) {
+                Object.entries(config.productCategories).forEach(([key, categoryData]) => {
+                    const iconInput = document.getElementById(key.toLowerCase() + 'Icon');
+                    if (iconInput && categoryData.icon) {
+                        iconInput.value = categoryData.icon;
+                    }
+                });
+            }
+            
+            // Apply action icons
+            if (config.icons) {
+                Object.entries(config.icons).forEach(([key, value]) => {
+                    const iconInput = document.getElementById(key + 'Icon');
+                    if (iconInput && value) {
+                        iconInput.value = value;
+                    }
+                });
+            }
+        }
+
+        function syncToExternalSystems(config) {
+            console.log('🔗 Syncing configuration to external systems...');
+            
+            // Sync to Pipedrive (if configured)
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('✅ Pipedrive sync completed:', result);
+                    })
+                    .withFailureHandler(function(error) {
+                        console.warn('⚠️ Pipedrive sync failed:', error);
+                    })
+                    .syncBrandingToPipedrive(config);
+            }
+            
+            // Sync to local storage as backup
+            localStorage.setItem('craftquote-branding-backup', JSON.stringify({
+                config: config,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            }));
         }
 
         function gatherConfiguration() {
