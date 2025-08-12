@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>Hybrid Component Assembler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .workspace-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Panel - Quote Canvas */
+        .quote-canvas {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.8);
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-header {
+            background: #1e293b;
+            padding: 15px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .canvas-title {
+            color: #60a5fa;
+            font-size: 1.2em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .mode-selector {
+            display: flex;
+            background: #334155;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .mode-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+        }
+
+        .mode-tab.active {
+            background: #60a5fa;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .mode-tab:hover:not(.active) {
+            background: rgba(96, 165, 250, 0.2);
+            color: #e2e8f0;
+        }
+
+        .canvas-workspace {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Template Launcher */
+        .template-launcher {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px dashed #334155;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .template-launcher:hover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .template-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.1);
+        }
+
+        .template-card .icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .template-card .name {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+
+        .template-card .price {
+            color: #10b981;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        /* Quote Assembly Area */
+        .quote-assembly {
+            min-height: 400px;
+        }
+
+        .assembly-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .assembly-item:hover {
+            border-color: #60a5fa;
+        }
+
+        .assembly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .assembly-name {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .assembly-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            background: #334155;
+            border: none;
+            color: #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #475569;
+        }
+
+        .control-btn.edit {
+            background: #f59e0b;
+        }
+
+        .control-btn.remove {
+            background: #ef4444;
+        }
+
+        .assembly-components {
+            color: #94a3b8;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        /* Right Panel - Component Library */
+        .component-library {
+            width: 400px;
+            background: rgba(30, 41, 59, 0.9);
+            border-left: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .library-header {
+            background: #1e293b;
+            padding: 15px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .library-title {
+            color: #60a5fa;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .filter-tag {
+            background: #334155;
+            color: #94a3b8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tag.active,
+.filter-tag:hover {
+            background: #60a5fa;
+            color: #0f172a;
+        }
+
+        .quick-filter {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-filter:hover {
+            background: #374151;
+            border-color: #60a5fa;
+            color: #e2e8f0;
+        }
+
+        .library-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .component-group {
+            margin-bottom: 20px;
+        }
+
+        .group-header {
+            color: #60a5fa;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #334155;
+            font-size: 0.9em;
+        }
+
+        .component-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .component-item:hover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .component-name {
+            color: #e2e8f0;
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+
+        .component-details {
+            color: #94a3b8;
+            font-size: 0.8em;
+            line-height: 1.3;
+        }
+
+        .component-price {
+            color: #10b981;
+            font-weight: 500;
+            margin-top: 4px;
+            font-size: 0.85em;
+        }
+
+        /* Bottom Controls */
+        .canvas-controls {
+            background: #1e293b;
+            padding: 15px;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        /* Quote Info Panel */
+        .quote-info {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quote-info h3 {
+            color: #60a5fa;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.85em;
+        }
+
+        .info-item {
+            color: #94a3b8;
+        }
+
+        .info-value {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        /* Smart Suggestions */
+        .smart-suggestions {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .suggestions-header {
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .suggestion-item {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .component-library {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .workspace-container {
+                flex-direction: column;
+            }
+            
+            .component-library {
+                width: 100%;
+                height: 40vh;
+            }
+        }
+
+        /* Animation */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .component-item.adding {
+            animation: slideInRight 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="workspace-container">
+        <!-- Left Panel - Quote Canvas -->
+        <div class="quote-canvas">
+            <div class="canvas-header">
+                <div class="canvas-title">
+                    Hybrid Component Assembler
+                </div>
+                <div class="mode-selector">
+                    <button class="mode-tab active" onclick="switchMode('hybrid')">Hybrid</button>
+                    <button class="mode-tab" onclick="switchMode('template')">Template</button>
+                    <button class="mode-tab" onclick="switchMode('assembly')">Assembly</button>
+                </div>
+            </div>
+
+            <div class="canvas-workspace">
+                <!-- Quote Information -->
+                <div class="quote-info">
+                    <h3>Quote Configuration</h3>
+                    <div class="info-grid">
+                        <div class="info-item">Product: <span class="info-value" id="productType">Select Template or Build Custom</span></div>
+                        <div class="info-item">Customer: <span class="info-value" id="customerName">TBD</span></div>
+                        <div class="info-item">Voltage: <span class="info-value" id="systemVoltage">480V</span></div>
+                        <div class="info-item">Components: <span class="info-value" id="componentCount">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Template Launcher (Hybrid Mode) -->
+                <div class="template-launcher" id="templateLauncher">
+                    <h3 style="color: #60a5fa; margin-bottom: 10px;">Quick Start with Smart Templates</h3>
+                    <p style="color: #94a3b8; margin-bottom: 20px;">Load a proven template, then customize with full freedom</p>
+                    
+                    <div class="template-grid">
+                        <div class="template-card" onclick="loadTemplate('BHAC')">
+                            <div class="icon">🍺</div>
+                            <div class="name">BHAC</div>
+                            <div class="price">~$4,528</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('DTAC')">
+                            <div class="icon">🥃</div>
+                            <div class="name">DTAC</div>
+                            <div class="price">~$4,202</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('CPAC')">
+                            <div class="icon">🧽</div>
+                            <div class="name">CPAC</div>
+                            <div class="price">~$8,643</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('AGAC')">
+                            <div class="icon">🌾</div>
+                            <div class="name">AGAC</div>
+                            <div class="price">~$6,379</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('GHAC')">
+                            <div class="icon">A</div>
+                            <div class="name">GHAC</div>
+                            <div class="price">~$7,523</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('CUSTOM')">
+                            <div class="icon">T</div>
+                            <div class="name">Custom</div>
+                            <div class="price">Build from scratch</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Suggestions -->
+                <div class="smart-suggestions" id="smartSuggestions" style="display: none;">
+                    <div class="suggestions-header">💡 Smart Suggestions</div>
+                    <div id="suggestionsList">
+                        <!-- Dynamic suggestions will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Quote Assembly Area -->
+                <div class="quote-assembly" id="quoteAssembly">
+                    <div style="text-align: center; color: #64748b; padding: 40px; font-style: italic;">
+                        Load a template or start building your custom quote...
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-controls">
+                <div class="control-group">
+                    <button class="btn btn-secondary" onclick="clearQuote()">Clear All</button>
+                    <button class="btn btn-secondary" onclick="saveAsTemplate()">Save as Template</button>
+                    <button class="btn btn-secondary" onclick="validateQuote()">Validate</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-primary" onclick="generateQuote()">Generate Quote</button>
+                    <button class="btn btn-secondary" onclick="generateBOM()">Generate BOM</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Component Library -->
+        <div class="component-library">
+            <div class="library-header">
+                <div class="library-title">
+                    Component Search 🔍
+                    <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">1300+ components available</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; margin: 10px 0;">
+                    <input type="text" class="search-box" placeholder="Search components (PLC, enclosure, VFD, etc.)..." 
+                           id="componentSearch" onkeyup="debounceSearch()" 
+                           style="flex: 1; padding: 8px 12px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px;">
+                    <button onclick="clearSearch()" style="background: #374151; border: 1px solid #475569; color: #9ca3af; padding: 8px; border-radius: 4px; cursor: pointer;">Clear</button>
+                </div>
+                <div class="search-info" id="searchInfo" style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
+                    Type to search through Master Catalog components...
+                </div>
+                <div class="quick-filters" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <button class="quick-filter" onclick="quickSearch('PLC')">PLC</button>
+                    <button class="quick-filter" onclick="quickSearch('Enclosure')">Enclosure</button>
+                    <button class="quick-filter" onclick="quickSearch('VFD')">VFD</button>
+                    <button class="quick-filter" onclick="quickSearch('HMI')">HMI</button>
+                    <button class="quick-filter" onclick="quickSearch('Safety')">Safety</button>
+                    <button class="quick-filter" onclick="quickSearch('Motor')">Motor</button>
+                </div>
+            </div>
+
+            <div class="library-content" id="libraryContent">
+                <!-- Search results will be displayed here -->
+                <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
+                    <div style="font-size: 1.2em; margin-bottom: 15px;">🔍 Fast Component Search</div>
+                    <div style="margin-bottom: 10px;">Search through 1300+ components from your Master Catalog</div>
+                    <div style="margin-bottom: 15px;">Try: "PLC", "480V", "Enclosure", "VFD", etc.</div>
+                    <div style="font-size: 0.9em; color: #475569;">Click the quick filters above or start typing to search</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== IMMEDIATE STARTUP DETECTION ==============
+        console.log('🎯 IMMEDIATE STARTUP - Script loading... Time:', new Date().toISOString());
+        console.log('🎯 IMMEDIATE STARTUP - Document ready state:', document.readyState);
+        console.log('🎯 IMMEDIATE STARTUP - Google object available:', typeof google !== 'undefined');
+        console.log('🎯 IMMEDIATE STARTUP - Window location:', window.location.href);
+        console.log('🎯 IMMEDIATE STARTUP - User Agent:', navigator.userAgent);
+        
+        // Check for Google Apps Script environment
+        console.log('🎯 ENVIRONMENT CHECK - window.google:', typeof window.google);
+        console.log('🎯 ENVIRONMENT CHECK - google.script:', typeof google !== 'undefined' ? typeof google.script : 'google undefined');
+        console.log('🎯 ENVIRONMENT CHECK - google.script.run:', typeof google !== 'undefined' && google.script ? typeof google.script.run : 'google.script undefined');
+        
+        let currentMode = 'hybrid';
+        let searchTimeout = null; // Add missing searchTimeout variable
+        let quoteData = {
+            components: [],
+            productType: '',
+            customerInfo: {},
+            configuration: {}
+        };
+        let componentLibrary = []; // Will store real component data
+
+        // Initialize the application
+        function initializeApplication() {
+            console.log('🎯 INITIALIZING APPLICATION...');
+            
+            // Fast startup - no heavy loading!
+            console.log('🚀 FAST STARTUP - Using search-based interface');
+            initializeInterface();
+        }
+
+        // Initialize search-based interface (no heavy loading!)
+        function initializeInterface() {
+            console.log('🚀 FAST STARTUP - Search-based interface initialized');
+            console.log('🚀 FAST STARTUP - Time:', new Date().toISOString());
+            
+            // No heavy component loading - just show search interface
+            updateInterface();
+            console.log('✅ Interface ready for searching!');
+        }
+
+        // Debounced search to avoid excessive API calls
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performComponentSearch, 300); // Wait 300ms after user stops typing
+        }
+
+        // Fast component search function
+        function performComponentSearch() {
+            const searchTerm = document.getElementById('componentSearch').value.trim();
+            const searchInfo = document.getElementById('searchInfo');
+            const libraryContent = document.getElementById('libraryContent');
+            
+            if (searchTerm.length < 2) {
+                // Show instructions when search is too short
+                libraryContent.innerHTML = `
+                    <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
+                        <div style="font-size: 1.2em; margin-bottom: 15px;">🔍 Fast Component Search</div>
+                        <div style="margin-bottom: 10px;">Search through 1300+ components from your Master Catalog</div>
+                        <div style="margin-bottom: 15px;">Try: "PLC", "480V", "Enclosure", "VFD", etc.</div>
+                        <div style="font-size: 0.9em; color: #475569;">Type at least 2 characters to search</div>
+                    </div>
+                `;
+                searchInfo.textContent = 'Type at least 2 characters to search...';
+                return;
+            }
+            
+            // Show searching indicator
+            searchInfo.innerHTML = `🔍 Searching for "${searchTerm}"...`;
+            libraryContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <div style="margin-bottom: 10px;">🔍 Searching Master Catalog...</div>
+                    <div style="font-size: 0.9em;">Finding components matching "${searchTerm}"</div>
+                </div>
+            `;
+            
+            // Perform the search
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('✅ Search results:', result);
+                        displaySearchResults(result, searchTerm);
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('❌ Search error:', error);
+                        searchInfo.textContent = 'Search failed. Please try again.';
+                        libraryContent.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #ef4444;">
+                                <div>❌ Search failed</div>
+                                <div style="font-size: 0.9em; margin-top: 10px;">Please try again or use mock components for testing</div>
+                                <button onclick="loadMockResults('${searchTerm}')" style="margin-top: 15px; padding: 8px 16px; background: #1e293b; border: 1px solid #475569; color: #e2e8f0; border-radius: 4px; cursor: pointer;">Use Mock Results</button>
+                            </div>
+                        `;
+                    })
+                    .searchComponents(searchTerm, 20);
+            } else {
+                // Fallback to mock search for testing
+                console.log('⚠️ Google script not available, using mock search results');
+                setTimeout(() => loadMockResults(searchTerm), 500);
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(result, searchTerm) {
+            const searchInfo = document.getElementById('searchInfo');
+            const libraryContent = document.getElementById('libraryContent');
+            
+            if (!result.success || result.components.length === 0) {
+                searchInfo.innerHTML = `No components found for "${searchTerm}"`;
+                libraryContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="margin-bottom: 10px;">😔 No components found</div>
+                        <div style="font-size: 0.9em; margin-bottom: 15px;">Try different keywords like "PLC", "enclosure", "motor", etc.</div>
+                        <button onclick="clearSearch()" style="padding: 8px 16px; background: #1e293b; border: 1px solid #475569; color: #e2e8f0; border-radius: 4px; cursor: pointer;">Clear Search</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            searchInfo.innerHTML = `Found ${result.components.length} components matching "${searchTerm}"`;
+            
+            let html = '<div class="search-results">';
+            result.components.forEach(component => {
+                html += `
+                    <div class="component-item" onclick="addComponentToQuote('${component.id}', '${encodeURIComponent(JSON.stringify(component))}')">
+                        <div class="component-name">${component.name}</div>
+                        <div class="component-details">
+                            <div class="component-description">${component.description}</div>
+                            <div class="component-meta">
+                                <span class="component-price">$${component.price.toFixed(2)}</span>
+                                <span class="component-category">${component.category}</span>
+                                <span class="component-part">${component.partNumber || component.id}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            libraryContent.innerHTML = html;
+        }
+
+        // Quick search buttons
+        function quickSearch(term) {
+            const searchBox = document.getElementById('componentSearch');
+            if (searchBox) {
+                searchBox.value = term;
+                performComponentSearch();
+            } else {
+                console.error('Search box element not found');
+            }
+        }
+
+        // Clear search
+        function clearSearch() {
+            document.getElementById('componentSearch').value = '';
+            document.getElementById('searchInfo').textContent = 'Type to search through Master Catalog components...';
+            document.getElementById('libraryContent').innerHTML = `
+                <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
+                    <div style="font-size: 1.2em; margin-bottom: 15px;">🔍 Fast Component Search</div>
+                    <div style="margin-bottom: 10px;">Search through 1300+ components from your Master Catalog</div>
+                    <div style="margin-bottom: 15px;">Try: "PLC", "480V", "Enclosure", "VFD", etc.</div>
+                    <div style="font-size: 0.9em; color: #475569;">Click the quick filters above or start typing to search</div>
+                </div>
+            `;
+        }
+
+        // Mock search results for testing
+        function loadMockResults(searchTerm) {
+            const mockResults = {
+                success: true,
+                components: [
+                    { id: 'PLC-IDEC-40IO', name: 'IDEC 40 I/O PLC', description: '24VDC, 24IN/16RO, RS485 & Ethernet', price: 310.00, category: 'Control Systems', partNumber: 'PLC-IDEC-40IO' },
+                    { id: 'ENC-60x36x12', name: '60"×36"×12" Type 4 Enclosure', description: 'Grey painted steel, NEMA 4', price: 561.97, category: 'Enclosures', partNumber: 'ENC-60x36x12' }
+                ]
+            };
+            
+            // Filter mock results based on search term
+            if (searchTerm.toLowerCase().includes('plc')) {
+                mockResults.components = mockResults.components.filter(c => c.name.toLowerCase().includes('plc'));
+            } else if (searchTerm.toLowerCase().includes('enclosure')) {
+                mockResults.components = mockResults.components.filter(c => c.name.toLowerCase().includes('enclosure'));
+            }
+            
+            displaySearchResults(mockResults, searchTerm);
+        }
+
+        // Add component to quote from search results
+        function addComponentToQuote(componentId, componentDataEncoded) {
+            try {
+                const componentData = JSON.parse(decodeURIComponent(componentDataEncoded));
+                
+                // Add to quote data
+                quoteData.components.push({
+                    id: componentData.id,
+                    name: componentData.name,
+                    description: componentData.description,
+                    price: componentData.price || 0,
+                    quantity: 1,
+                    category: componentData.category,
+                    partNumber: componentData.partNumber
+                });
+                
+                // Update the interface
+                updateQuoteDisplay();
+                
+                // Show success message
+                console.log(`✅ Added ${componentData.name} to quote`);
+                
+                // Optional: Flash the component briefly
+                setTimeout(() => {
+                    updateQuoteDisplay(); // Refresh to show the added component
+                }, 100);
+                
+            } catch (error) {
+                console.error('❌ Error adding component to quote:', error);
+                alert('Error adding component to quote. Please try again.');
+            }
+        }
+
+        // Fallback mock component library for testing
+        function loadMockComponentLibrary() {
+            console.log('🎭 Loading mock component library for testing...');
+            
+            componentLibrary = [
+                {
+                    name: 'Enclosures & Panels',
+                    icon: '🏠',
+                    components: [
+                        { id: 'ENC-60x36x12', name: '60"×36"×12" Type 4 Enclosure', description: 'Grey painted steel, NEMA 4<br>Standard industrial enclosure', price: 561.97, category: 'Enclosures' },
+                        { id: 'ENC-42x36x10-SS', name: '42"×36"×10" Stainless Enclosure', description: 'Type 4X stainless steel<br>Food grade applications', price: 892.12, category: 'Enclosures' }
+                    ]
+                },
+                {
+                    name: 'Control Systems',
+                    icon: '🎛️',
+                    components: [
+                        { id: 'PLC-IDEC-40IO', name: 'IDEC 40 I/O PLC', description: '24VDC, 24IN/16RO<br>RS485 & Ethernet', price: 310.00, category: 'Control Systems' },
+                        { id: 'HMI-12IN', name: '12.1" Color HMI', description: '65K Color, 1024×768<br>Touch screen interface', price: 1085.00, category: 'Control Systems' }
+                    ]
+                },
+                {
+                    name: 'Power & Motor Control',
+                    icon: '⚡',
+                    components: [
+                        { id: 'VFD-1.5HP', name: '1.5HP VFD Drive', description: 'ABB ACS355, 480V<br>NEMA 1 enclosure', price: 270.48, category: 'Power & Motor Control' },
+                        { id: 'DISCONNECT-60A', name: '60A Non-Fused Disconnect', description: '3-pole disconnect switch<br>NEMA 1 enclosure', price: 103.32, category: 'Power & Motor Control' }
+                    ]
+                },
+                {
+                    name: 'Safety Systems',
+                    icon: '🛡️',
+                    components: [
+                        { id: 'SAFETY-RELAY', name: 'Safety Relay System', description: 'AB MSR127RP<br>24VAC/DC, 3NO/1NC', price: 139.20, category: 'Safety Systems' },
+                        { id: 'E-STOP', name: 'Emergency Stop Button', description: 'Red mushroom head<br>22mm mounting', price: 22.44, category: 'Safety Systems' }
+                    ]
+                }
+            ];
+            
+            renderComponentLibrary();
+            console.log('✅ Mock component library loaded');
+        }
+
+        // Render the component library in the UI
+        function renderComponentLibrary() {
+            const libraryContent = document.getElementById('libraryContent');
+            if (!libraryContent) {
+                console.error('❌ Library content element not found');
+                return;
+            }
+            
+            let html = '';
+            
+            componentLibrary.forEach(group => {
+                html += `
+                    <div class="component-group">
+                        <div class="group-header">${group.icon} ${group.name}</div>
+                `;
+                
+                group.components.forEach(component => {
+                    html += `
+                        <div class="component-item" onclick="addComponent('${component.id}')" data-category="${component.category.toLowerCase()}">
+                            <div class="component-name">${component.name}</div>
+                            <div class="component-details">${component.description}</div>
+                            <div class="component-price">$${component.price.toFixed(2)}</div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            
+            libraryContent.innerHTML = html;
+            console.log(`✅ Component library UI rendered with ${componentLibrary.length} groups`);
+        }
+
+        // Mode switching
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update active tab
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update interface based on mode
+            updateInterface();
+        }
+
+        function updateInterface() {
+            const templateLauncher = document.getElementById('templateLauncher');
+            
+            switch(currentMode) {
+                case 'template':
+                    templateLauncher.style.display = 'block';
+                    break;
+                case 'assembly':
+                    templateLauncher.style.display = 'none';
+                    break;
+                case 'hybrid':
+                default:
+                    templateLauncher.style.display = 'block';
+                    break;
+            }
+        }
+
+        // Template loading
+        function loadTemplate(templateType) {
+            console.log('=== TEMPLATE LOADING DEBUG ===');
+            console.log('Loading template:', templateType);
+            console.log('typeof google:', typeof google);
+            console.log('google exists:', typeof google !== 'undefined');
+            console.log('window.google exists:', typeof window.google !== 'undefined');
+            console.log('window location:', window.location.href);
+            
+            if (typeof google !== 'undefined') {
+                console.log('google object:', google);
+                console.log('google.script exists:', !!google.script);
+                if (google.script) {
+                    console.log('google.script object:', google.script);
+                    console.log('google.script.run exists:', !!google.script.run);
+                }
+            }
+            
+            if (templateType === 'CUSTOM') {
+                clearQuote();
+                document.getElementById('productType').textContent = 'Custom Build';
+                document.getElementById('templateLauncher').style.display = 'none';
+                return;
+            }
+
+            // Show loading and set product type
+            document.getElementById('productType').textContent = templateType;
+            
+            // Enhanced environment detection for Google Apps Script
+            const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                      (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                      window.location.href.includes('script.google.com') ||
+                                      window.location.href.includes('googleusercontent.com');
+                                      
+            console.log('Environment check - Google Apps Script:', isGoogleAppsScript);
+            console.log('URL check:', window.location.href);
+            
+            if (isGoogleAppsScript) {
+                console.log('🟢 Using Google Apps Script backend - calling loadProductTemplate');
+                
+                // Try different ways to access google.script.run
+                let scriptRun = null;
+                if (google && google.script && google.script.run) {
+                    scriptRun = google.script.run;
+                } else if (window.google && window.google.script && window.google.script.run) {
+                    scriptRun = window.google.script.run;
+                }
+                
+                if (scriptRun) {
+                    console.log('Found script runner, calling loadProductTemplate...');
+                    scriptRun
+                        .withSuccessHandler(function(result) {
+                            console.log('✅ Backend response received:', result);
+                            console.log('✅ Response type:', typeof result);
+                            console.log('✅ Response is null?', result === null);
+                            console.log('✅ Response is undefined?', result === undefined);
+                            if (result) {
+                                console.log('✅ Response has components?', !!result.components);
+                                console.log('✅ Components length:', result.components ? result.components.length : 'N/A');
+                            }
+                            handleTemplateLoaded(result);
+                        })
+                        .withFailureHandler(function(error) {
+                            console.error('❌ Backend call failed:', error);
+                            console.log('Falling back to mock data due to backend error');
+                            const mockData = getMockTemplateData(templateType);
+                            handleTemplateLoaded(mockData);
+                        })
+                        .loadProductTemplate(templateType);
+                } else {
+                    console.warn('⚠️ Google Script runner not found, using mock data');
+                    const mockData = getMockTemplateData(templateType);
+                    setTimeout(() => handleTemplateLoaded(mockData), 500);
+                }
+            } else {
+                console.log('🌐 Using mock template data (browser mode)');
+                // Standalone test environment - use mock data
+                try {
+                    const mockTemplateData = getMockTemplateData(templateType);
+                    console.log('Mock template data:', mockTemplateData);
+                    setTimeout(() => handleTemplateLoaded(mockTemplateData), 500); // Simulate loading delay
+                } catch (error) {
+                    console.error('Error getting mock template data:', error);
+                    handleTemplateError(error);
+                }
+            }
+        }
+
+        // Mock template data for standalone testing
+        function getMockTemplateData(templateType) {
+            const templates = {
+                'BHAC': {
+                    productType: 'Brewery Heat Automation Control',
+                    components: [
+                        { id: 'A8066CHFL', name: '8Hx6Wx6D Grey Type 4 Enclosure', description: '8Hx6Wx6D Grey Type 4 Enclosure', unitPrice: 65.91, quantity: 1 },
+                        { id: 'CSD16126', name: '16Hx12Wx6D Grey Type 4 Enclosure', description: '16Hx12Wx6D Grey Type 4 Enclosure', unitPrice: 178.35, quantity: 1 },
+                        { id: 'CSD16166', name: '16Hx16Wx6D Grey Type 4 Enclosure', description: '16Hx16Wx6D Grey Type 4 Enclosure', unitPrice: 191.65, quantity: 1 },
+                        { id: 'CSD20208', name: '20Hx20Wx8D Grey Type 4 Enclosure', description: '20Hx20Wx8D Grey Type 4 Enclosure', unitPrice: 233.64, quantity: 1 }
+                    ],
+                    suggestions: ['Consider adding steam control module', 'Upgrade to redundant temperature monitoring']
+                },
+                'DTAC': {
+                    productType: 'Distillery Temperature Automation Control',
+                    components: [
+                        { id: 'A10106CHFL', name: '10Hx10Wx6D Grey Type 4 Enclosure', description: '10Hx10Wx6D Grey Type 4 Enclosure', unitPrice: 84.23, quantity: 1 },
+                        { id: 'A16148CHFL', name: '16Hx14Wx8D Grey Type 4 Enclosure', description: '16Hx14Wx8D Grey Type 4 Enclosure', unitPrice: 138.51, quantity: 1 },
+                        { id: 'CSD16610', name: '16Hx16Wx10D Grey Type 4 Enclosure', description: '16Hx16Wx10D Grey Type 4 Enclosure', unitPrice: 206.20, quantity: 1 },
+                        { id: 'CP1612G', name: 'Galvanized Subpanel for 16x12 Enclosure', description: 'Galvanized Subpanel for 16x12 Enclosure', unitPrice: 8.00, quantity: 1 }
+                    ],
+                    suggestions: ['Add vapor recovery system', 'Consider ethanol vapor detection']
+                },
+                'CPAC': {
+                    productType: 'CIP Automated Control',
+                    components: [
+                        { id: 'CSD20160SS', name: 'STAINLESS 20Hx16Wx10D Type 4x Enclosure', description: 'STAINLESS 20Hx16Wx10D Type 4x Enclosure', unitPrice: 723.32, quantity: 1 },
+                        { id: 'CSD20168SS', name: 'STAINLESS 20Hx16Wx8D Type 4x Enclosure', description: 'STAINLESS 20Hx16Wx8D Type 4x Enclosure', unitPrice: 427.72, quantity: 1 },
+                        { id: 'CP2016G', name: 'Galvanized Subpanel for 20x16 Enclosure', description: 'Galvanized Subpanel for 20x16 Enclosure', unitPrice: 23.31, quantity: 1 },
+                        { id: 'CP2020G', name: 'Galvanized Subpanel for 20x20 enclosure', description: 'Galvanized Subpanel for 20x20 enclosure', unitPrice: 27.98, quantity: 1 }
+                    ],
+                    suggestions: ['Upgrade to wireless monitoring', 'Add mobile app control']
+                },
+                'AGAC': {
+                    productType: 'Advanced Grain Automation Control',
+                    components: [
+                        { id: 'CSD20206', name: '20Hx20Wx6D Grey Type 4 Enclosure', description: '20Hx20Wx6D Grey Type 4 Enclosure', unitPrice: 181.47, quantity: 1 },
+                        { id: 'CSD20208', name: '20Hx20Wx8D Grey Type 4 Enclosure', description: '20Hx20Wx8D Grey Type 4 Enclosure', unitPrice: 233.64, quantity: 1 },
+                        { id: 'CSD20210', name: '20Hx20Wx10D Grey Type 4 Enclosure', description: '20Hx20Wx10D Grey Type 4 Enclosure', unitPrice: 239.88, quantity: 1 },
+                        { id: 'CP2020G', name: 'Galvanized Subpanel for 20x20 enclosure', description: 'Galvanized Subpanel for 20x20 enclosure', unitPrice: 27.98, quantity: 1 }
+                    ],
+                    suggestions: ['Add dust collection automation', 'Consider grain quality monitoring']
+                },
+                'GHAC': {
+                    productType: 'Glycol Heat Automation Control',
+                    components: [
+                        { id: 'A6044CHNFSS', name: '6Hx4Wx4D SS JBOX', description: '6Hx4Wx4D SS JBOX', unitPrice: 161.06, quantity: 1 },
+                        { id: 'A8P6G', name: 'Galvanized Subpanel for 8x6 Enclosure', description: 'Galvanized Subpanel for 8x6 Enclosure', unitPrice: 4.17, quantity: 1 },
+                        { id: 'CP1610G', name: 'Galvanized Subpanel for 16x10 Enclosure', description: 'Galvanized Subpanel for 16x10 Enclosure', unitPrice: 6.70, quantity: 1 },
+                        { id: 'CP1616G', name: 'Galvanized Subpanel for 16x16 Enclosure', description: 'Galvanized Subpanel for 16x16 Enclosure', unitPrice: 20.33, quantity: 1 }
+                    ],
+                    suggestions: ['Add glycol leak detection', 'Consider backup pump system']
+                }
+            };
+
+            return templates[templateType] || {
+                productType: 'Unknown Template',
+                components: [],
+                suggestions: []
+            };
+        }
+
+        function handleTemplateLoaded(templateData) {
+            console.log('=== TEMPLATE LOADED DEBUG ===');
+            console.log('Received templateData:', templateData);
+            console.log('templateData type:', typeof templateData);
+            
+            // Check if templateData is null or undefined
+            if (!templateData) {
+                console.error('❌ templateData is null or undefined!');
+                console.log('Falling back to mock data...');
+                const mockData = getMockTemplateData('BHAC');
+                templateData = mockData;
+            }
+            
+            console.log('templateData.components:', templateData.components);
+            console.log('Components length:', templateData.components ? templateData.components.length : 'N/A');
+            
+            if (templateData.components && templateData.components.length > 0) {
+                console.log('First component:', templateData.components[0]);
+            }
+            
+            quoteData.components = templateData.components || [];
+            quoteData.productType = templateData.productType;
+            
+            // Hide template launcher
+            document.getElementById('templateLauncher').style.display = 'none';
+            
+            // Show loaded components
+            updateQuoteDisplay();
+            
+            // Show smart suggestions
+            showSmartSuggestions(templateData.suggestions || []);
+        }
+
+        function handleTemplateError(error) {
+            console.error('Template loading error:', error);
+            alert('Error loading template: ' + error.message);
+        }
+
+        // Component management
+        function addComponent(componentId) {
+            // Add visual feedback
+            if (event && event.target) {
+                event.target.classList.add('adding');
+                
+                setTimeout(() => {
+                    event.target.classList.remove('adding');
+                }, 300);
+            }
+
+            // Check if we have Google Apps Script available
+            const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                      (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                      window.location.href.includes('script.google.com') ||
+                                      window.location.href.includes('googleusercontent.com');
+            
+            if (isGoogleAppsScript) {
+                // Call backend to get component details
+                google.script.run
+                    .withSuccessHandler(handleComponentAdded)
+                    .withFailureHandler(handleComponentError)
+                    .getComponentDetails(componentId);
+            } else {
+                // Browser mode - find component in local library
+                let foundComponent = null;
+                componentLibrary.forEach(group => {
+                    const comp = group.components.find(c => c.id === componentId);
+                    if (comp) {
+                        foundComponent = {
+                            id: comp.id,
+                            name: comp.name,
+                            description: comp.description,
+                            price: comp.price,
+                            unitPrice: comp.price,
+                            category: comp.category,
+                            quantity: 1,
+                            source: 'Mock Library'
+                        };
+                    }
+                });
+                
+                if (foundComponent) {
+                    handleComponentAdded(foundComponent);
+                } else {
+                    handleComponentError({ message: `Component ${componentId} not found in library` });
+                }
+            }
+        }
+
+        function handleComponentAdded(componentData) {
+            quoteData.components.push(componentData);
+            updateQuoteDisplay();
+            updateSmartSuggestions();
+        }
+
+        function handleComponentError(error) {
+            console.error('Component error:', error);
+            alert('Error adding component: ' + error.message);
+        }
+
+        function removeComponent(index) {
+            quoteData.components.splice(index, 1);
+            updateQuoteDisplay();
+            updateSmartSuggestions();
+        }
+
+        function editComponent(index) {
+            const component = quoteData.components[index];
+            // Open component editor (to be implemented)
+            console.log('Edit component:', component);
+        }
+
+        // Display updates
+        function updateQuoteDisplay() {
+            const assemblyDiv = document.getElementById('quoteAssembly');
+            
+            if (quoteData.components.length === 0) {
+                assemblyDiv.innerHTML = `
+                    <div style="text-align: center; color: #64748b; padding: 40px; font-style: italic;">
+                        Load a template or start building your custom quote...
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            quoteData.components.forEach((component, index) => {
+                html += `
+                    <div class="assembly-item">
+                        <div class="assembly-header">
+                            <div class="assembly-name">${component.name}</div>
+                            <div class="assembly-controls">
+                                <button class="control-btn edit" onclick="editComponent(${index})">Edit</button>
+                                <button class="control-btn remove" onclick="removeComponent(${index})">Remove</button>
+                            </div>
+                        </div>
+                        <div class="assembly-components">
+                            ${component.description}<br>
+                            <strong style="color: #10b981;">$${(component.price || component.unitPrice || 0).toFixed(2)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+
+            assemblyDiv.innerHTML = html;
+            
+            // Update component count
+            document.getElementById('componentCount').textContent = quoteData.components.length;
+        }
+
+        function showSmartSuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('smartSuggestions');
+            const suggestionsList = document.getElementById('suggestionsList');
+            
+            if (suggestions && suggestions.length > 0) {
+                let html = '';
+                suggestions.forEach((suggestion, index) => {
+                    // Handle both string suggestions and object suggestions
+                    const suggestionText = typeof suggestion === 'string' ? suggestion : 
+                                         (suggestion.name ? `${suggestion.name} - ${suggestion.reason || ''}` : suggestion.toString());
+                    const suggestionId = typeof suggestion === 'object' && suggestion.id ? suggestion.id : `suggestion_${index}`;
+                    
+                    html += `
+                        <div class="suggestion-item" onclick="handleSuggestionClick('${suggestionId}', '${suggestionText}')">
+                            ${suggestionText}
+                        </div>
+                    `;
+                });
+                
+                suggestionsList.innerHTML = html;
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+
+        // Handle suggestion clicks
+        function handleSuggestionClick(suggestionId, suggestionText) {
+            console.log('Suggestion clicked:', suggestionText);
+            // For now, just show info about the suggestion
+            alert('Suggestion: ' + suggestionText + '\n\nThis would add recommended components to your quote.');
+        }
+
+        function updateSmartSuggestions() {
+            // Check if we have Google Apps Script available
+            const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                      (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                      window.location.href.includes('script.google.com') ||
+                                      window.location.href.includes('googleusercontent.com');
+            
+            if (isGoogleAppsScript) {
+                // Call backend for suggestions based on current components
+                google.script.run
+                    .withSuccessHandler(showSmartSuggestions)
+                    .getSmartSuggestions(quoteData.components);
+            } else {
+                // Browser mode - show mock suggestions
+                const mockSuggestions = [
+                    'Consider adding a safety relay for motor control applications',
+                    'Add emergency stop button for safety compliance',
+                    'Upgrade to stainless steel enclosure for food applications'
+                ];
+                showSmartSuggestions(mockSuggestions);
+            }
+        }
+
+        // Search and filtering
+        function filterComponents() {
+            const searchTerm = document.getElementById('componentSearch').value.toLowerCase();
+            const components = document.querySelectorAll('.component-item');
+            
+            components.forEach(component => {
+                const text = component.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    component.style.display = 'block';
+                } else {
+                    component.style.display = 'none';
+                }
+            });
+        }
+
+        function filterByCategory(category) {
+            // Update active filter
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // Show/hide components based on category
+            const components = document.querySelectorAll('.component-item');
+            
+            if (category === 'all') {
+                components.forEach(component => component.style.display = 'block');
+                return;
+            }
+            
+            const categoryMap = {
+                'enclosures': ['enclosures', 'panels'],
+                'control': ['control'],
+                'motor': ['power', 'motor'],
+                'safety': ['safety']
+            };
+            
+            components.forEach(component => {
+                const componentCategory = component.getAttribute('data-category') || '';
+                const shouldShow = categoryMap[category] && 
+                                 categoryMap[category].some(cat => componentCategory.includes(cat));
+                component.style.display = shouldShow ? 'block' : 'none';
+            });
+        }
+
+        // Quote operations
+        function clearQuote() {
+            quoteData.components = [];
+            updateQuoteDisplay();
+            document.getElementById('productType').textContent = 'Select Template or Build Custom';
+            document.getElementById('templateLauncher').style.display = 'block';
+            document.getElementById('smartSuggestions').style.display = 'none';
+        }
+
+        function saveAsTemplate() {
+            const templateName = prompt('Enter template name:');
+            if (templateName) {
+                const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                          (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                          window.location.href.includes('script.google.com') ||
+                                          window.location.href.includes('googleusercontent.com');
+                
+                if (isGoogleAppsScript) {
+                    google.script.run
+                        .withSuccessHandler(() => alert('Template saved successfully!'))
+                        .withFailureHandler(error => alert('Error saving template: ' + error.message))
+                        .saveAsTemplate(templateName, quoteData);
+                } else {
+                    alert('Template saving is only available in Google Apps Script environment');
+                }
+            }
+        }
+
+        function refreshComponentLibrary() {
+            console.log('🔄 Clearing search and resetting interface...');
+            clearSearch();
+        }
+
+        function validateQuote() {
+            if (quoteData.components.length === 0) {
+                alert('Please add components to your quote before validating.');
+                return;
+            }
+            
+            const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                      (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                      window.location.href.includes('script.google.com') ||
+                                      window.location.href.includes('googleusercontent.com');
+            
+            if (isGoogleAppsScript) {
+                google.script.run
+                    .withSuccessHandler(handleValidationResult)
+                    .withFailureHandler(error => alert('Validation error: ' + error.message))
+                    .validateQuote(quoteData);
+            } else {
+                // Browser mode - simple validation
+                const mockValidation = {
+                    isValid: true,
+                    summary: `Quote validated successfully!\n\nComponents: ${quoteData.components.length}\nTotal Value: $${quoteData.components.reduce((sum, comp) => sum + (comp.price || comp.unitPrice || 0), 0).toFixed(2)}`,
+                    issues: []
+                };
+                handleValidationResult(mockValidation);
+            }
+        }
+
+        function handleValidationResult(validation) {
+            if (validation.isValid) {
+                alert('Quote validated successfully!\n\n' + validation.summary);
+            } else {
+                alert('⚠️ Validation Issues Found:\n\n' + validation.issues.join('\n'));
+            }
+        }
+
+        function generateQuote() {
+            if (quoteData.components.length === 0) {
+                alert('Please add components to your quote before generating.');
+                return;
+            }
+            
+            // Open customer information dialog
+            openCustomerInfoDialog();
+        }
+
+        function openCustomerInfoDialog() {
+            // For Google Apps Script environment, call backend to open dialog
+            const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                      (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                      window.location.href.includes('script.google.com') ||
+                                      window.location.href.includes('googleusercontent.com');
+            
+            if (isGoogleAppsScript) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('✅ Customer dialog opened successfully');
+                        if (result && result.success) {
+                            handleQuoteGenerated(result);
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('❌ Error opening customer form:', error);
+                        // Fallback to simple prompt
+                        openSimpleCustomerForm();
+                    })
+                    .openCustomerInfoDialog(quoteData);
+            } else {
+                // Browser mode - use simple form
+                openSimpleCustomerForm();
+            }
+        }
+
+        function openSimpleCustomerForm() {
+            // Simple customer info collection for testing/browser mode
+            const customerName = prompt('Enter customer name:', 'ABC Company');
+            const contactEmail = prompt('Enter contact email:', 'contact@company.com');
+            const projectName = prompt('Enter project name:', 'Automation System');
+            
+            if (customerName && contactEmail && projectName) {
+                const customerData = {
+                    name: customerName,
+                    email: contactEmail,
+                    project: projectName,
+                    quoteData: quoteData,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Simulate quote generation
+                const mockResult = {
+                    success: true,
+                    quoteNumber: 'Q' + Date.now(),
+                    sheetName: 'Quote_' + customerName.replace(/\s+/g, '_'),
+                    customerName: customerName,
+                    totalComponents: quoteData.components.length,
+                    estimatedValue: quoteData.components.reduce((sum, comp) => sum + (comp.price || comp.unitPrice || 0), 0)
+                };
+                
+                handleQuoteGenerated(mockResult);
+            } else {
+                alert('Quote generation cancelled - customer information is required.');
+            }
+        }
+
+        // Function to provide quote data to customer info dialog
+        window.getQuoteData = function() {
+            return {
+                components: quoteData.components,
+                productType: quoteData.productType || document.getElementById('productType').textContent,
+                totalComponents: quoteData.components.length,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function handleQuoteGenerated(result) {
+            if (result.success) {
+                alert('Professional Quote Generated!\n\n' + 
+                      'Quote Number: ' + result.quoteNumber + '\n' +
+                      'Sheet: ' + result.sheetName + '\n\n' +
+                      'Your professional quote is ready for customer delivery!');
+            } else {
+                alert('Quote generation failed: ' + result.error);
+            }
+        }
+
+        function generateBOM() {
+            if (quoteData.components.length === 0) {
+                alert('Please add components to your quote before generating BOM.');
+                return;
+            }
+            
+            const isGoogleAppsScript = (typeof google !== 'undefined' && google.script) || 
+                                      (typeof window !== 'undefined' && window.google && window.google.script) ||
+                                      window.location.href.includes('script.google.com') ||
+                                      window.location.href.includes('googleusercontent.com');
+            
+            if (isGoogleAppsScript) {
+                google.script.run
+                    .withSuccessHandler(handleBOMGenerated)
+                    .withFailureHandler(error => alert('BOM generation error: ' + error.message))
+                    .generateBOMFromAssembly(quoteData);
+            } else {
+                // Browser mode - simulate BOM generation
+                const mockBOM = {
+                    success: true,
+                    sheetName: 'BOM_' + new Date().toISOString().slice(0, 10),
+                    message: 'BOM generated with ' + quoteData.components.length + ' components'
+                };
+                handleBOMGenerated(mockBOM);
+            }
+        }
+
+        function handleBOMGenerated(result) {
+            if (result.success) {
+                alert('BOM generated successfully!\n\nSheet: ' + result.sheetName);
+            } else {
+                alert('BOM generation failed: ' + result.message);
+            }
+        }
+
+        // Initialize
+        initializeApplication();
+        
+        // ============== FINAL STARTUP DETECTION ==============
+        console.log('🎯 FINAL STARTUP - Script fully loaded, calling updateInterface()');
+        console.log('🎯 FINAL STARTUP - Final environment check:');
+        console.log('  - google available:', typeof google !== 'undefined');
+        console.log('  - google.script.run available:', typeof google !== 'undefined' && google.script && typeof google.script.run !== 'undefined');
+        console.log('  - Current mode:', currentMode);
+        console.log('🎯 FINAL STARTUP - Ready for user interaction!');
+        
+        // Test DOM availability
+        setTimeout(() => {
+            console.log('🎯 DOM TEST - Template launcher element:', document.getElementById('templateLauncher') ? 'FOUND' : 'NOT FOUND');
+            console.log('🎯 DOM TEST - Mode tabs:', document.querySelectorAll('.mode-tab').length, 'tabs found');
+            
+            // Test Google Apps Script backend connection
+            if (typeof google !== 'undefined' && google.script && typeof google.script.run !== 'undefined') {
+                console.log('🎯 BACKEND TEST - Testing Google Apps Script connection...');
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('🎯 BACKEND TEST - SUCCESS!', result);
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('🎯 BACKEND TEST - FAILED!', error);
+                    })
+                    .testBackendConnection();
+            } else {
+                console.log('🎯 BACKEND TEST - Skipped (not in Google Apps Script environment)');
+            }
+        }, 100);
+    </script>
+</body>
+</html>

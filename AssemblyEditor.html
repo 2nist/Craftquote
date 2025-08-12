@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>Assembly Editor - Create New Components</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .editor-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.9);
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .editor-header h1 {
+            margin-bottom: 8px;
+            font-size: 2em;
+        }
+
+        .editor-header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .editor-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 25px;
+        }
+
+        .section-title {
+            color: #60a5fa;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .bom-section {
+            grid-column: 1 / -1;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 10px;
+        }
+
+        .bom-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .bom-table th,
+        .bom-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        .bom-table th {
+            background: #1e293b;
+            color: #60a5fa;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .bom-table td {
+            color: #e2e8f0;
+            font-size: 0.85em;
+        }
+
+        .bom-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            background: #334155;
+            color: #e2e8f0;
+            font-size: 0.85em;
+        }
+
+        .add-bom-row {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .add-bom-row:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .remove-row {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .remove-row:hover {
+            background: #dc2626;
+        }
+
+        .editor-actions {
+            background: #1e293b;
+            padding: 20px 30px;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+
+        .btn-preview {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .btn-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .price-estimate {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .price-estimate .amount {
+            font-size: 1.5em;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .validation-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #fecaca;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #a7f3d0;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .editor-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1>🔧 Assembly Editor</h1>
+            <p>Create and define new component assemblies for your system library</p>
+        </div>
+
+        <form id="assemblyForm" class="editor-content">
+            <!-- Basic Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">📋 Basic Information</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Assembly Name *</label>
+                    <input type="text" id="assemblyName" class="form-input" placeholder="e.g., Advanced Brewery Control Panel" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Assembly ID *</label>
+                    <input type="text" id="assemblyId" class="form-input" placeholder="e.g., ABCP-001" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <select id="assemblyCategory" class="form-input form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Control Systems">Control Systems</option>
+                        <option value="Enclosures">Enclosures</option>
+                        <option value="Power & Motor Control">Power & Motor Control</option>
+                        <option value="Safety Systems">Safety Systems</option>
+                        <option value="Communication">Communication</option>
+                        <option value="Custom Assemblies">Custom Assemblies</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea id="assemblyDescription" class="form-input form-textarea" placeholder="Detailed description of what this assembly does and its key features..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Applications</label>
+                    <input type="text" id="assemblyApplications" class="form-input" placeholder="e.g., Brewery, Distillery, Food Processing">
+                </div>
+            </div>
+
+            <!-- Configuration Section -->
+            <div class="form-section">
+                <h2 class="section-title">⚙️ Configuration</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Voltage Rating</label>
+                    <select id="assemblyVoltage" class="form-input form-select">
+                        <option value="24VDC">24VDC</option>
+                        <option value="120VAC">120VAC</option>
+                        <option value="240VAC">240VAC</option>
+                        <option value="480VAC" selected>480VAC</option>
+                        <option value="600VAC">600VAC</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phase Configuration</label>
+                    <select id="assemblyPhase" class="form-input form-select">
+                        <option value="Single Phase">Single Phase</option>
+                        <option value="3 Phase" selected>3 Phase</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Enclosure Type</label>
+                    <select id="assemblyEnclosure" class="form-input form-select">
+                        <option value="NEMA 1">NEMA 1</option>
+                        <option value="NEMA 4" selected>NEMA 4</option>
+                        <option value="NEMA 4X">NEMA 4X (Stainless)</option>
+                        <option value="NEMA 12">NEMA 12</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Complexity Level</label>
+                    <select id="assemblyComplexity" class="form-input form-select">
+                        <option value="Simple">Simple (1-5 components)</option>
+                        <option value="Moderate" selected>Moderate (6-15 components)</option>
+                        <option value="Complex">Complex (16+ components)</option>
+                    </select>
+                </div>
+
+                <div class="price-estimate">
+                    <div>Estimated Assembly Price</div>
+                    <div class="amount" id="priceEstimate">$0.00</div>
+                    <div style="font-size: 0.8em; color: #94a3b8; margin-top: 5px;">Based on BOM components</div>
+                </div>
+            </div>
+
+            <!-- BOM Section -->
+            <div class="bom-section">
+                <h2 class="section-title">📦 Bill of Materials</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px;">Define the components that make up this assembly</p>
+                
+                <table class="bom-table">
+                    <thead>
+                        <tr>
+                            <th>Component ID</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bomTableBody">
+                        <tr>
+                            <td><input type="text" class="bom-input component-id" placeholder="e.g., A8066CHFL"></td>
+                            <td><input type="text" class="bom-input component-desc" placeholder="Component description"></td>
+                            <td><input type="number" class="bom-input component-qty" value="1" min="1"></td>
+                            <td><input type="number" class="bom-input component-price" placeholder="0.00" step="0.01"></td>
+                            <td class="total-cell">$0.00</td>
+                            <td><button type="button" class="remove-row" onclick="removeBomRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <button type="button" class="add-bom-row" onclick="addBomRow()">+ Add Component</button>
+                
+                <div class="validation-message" id="validationMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+            </div>
+        </form>
+
+        <div class="editor-actions">
+            <div>
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+                <button type="button" class="btn btn-preview" onclick="previewAssembly()">Preview Assembly</button>
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">Save as Draft</button>
+                <button type="button" class="btn btn-primary" onclick="saveNewAssembly()">Create Assembly</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let bomRowCount = 1;
+
+        // Add new BOM row
+        function addBomRow() {
+            const tbody = document.getElementById('bomTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" class="bom-input component-id" placeholder="e.g., A8066CHFL"></td>
+                <td><input type="text" class="bom-input component-desc" placeholder="Component description"></td>
+                <td><input type="number" class="bom-input component-qty" value="1" min="1"></td>
+                <td><input type="number" class="bom-input component-price" placeholder="0.00" step="0.01"></td>
+                <td class="total-cell">$0.00</td>
+                <td><button type="button" class="remove-row" onclick="removeBomRow(this)">Remove</button></td>
+            `;
+            tbody.appendChild(row);
+            bomRowCount++;
+            updateTotalPrices();
+        }
+
+        // Remove BOM row
+        function removeBomRow(button) {
+            if (bomRowCount > 1) {
+                button.closest('tr').remove();
+                bomRowCount--;
+                updateTotalPrices();
+            } else {
+                alert('At least one component is required for an assembly.');
+            }
+        }
+
+        // Update price calculations
+        function updateTotalPrices() {
+            const rows = document.querySelectorAll('#bomTableBody tr');
+            let totalAssemblyPrice = 0;
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.component-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.component-price').value) || 0;
+                const total = qty * price;
+                
+                row.querySelector('.total-cell').textContent = `$${total.toFixed(2)}`;
+                totalAssemblyPrice += total;
+            });
+
+            document.getElementById('priceEstimate').textContent = `$${totalAssemblyPrice.toFixed(2)}`;
+        }
+
+        // Add event listeners for price updates
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('component-qty') || e.target.classList.contains('component-price')) {
+                updateTotalPrices();
+            }
+        });
+
+        // Auto-generate Assembly ID from name
+        document.getElementById('assemblyName').addEventListener('input', function(e) {
+            const name = e.target.value;
+            const id = name.toUpperCase()
+                          .replace(/[^A-Z0-9\s]/g, '')
+                          .replace(/\s+/g, '-')
+                          .substring(0, 20);
+            
+            if (id && !document.getElementById('assemblyId').value) {
+                document.getElementById('assemblyId').value = id + '-001';
+            }
+        });
+
+        // Validate form
+        function validateForm() {
+            const requiredFields = ['assemblyName', 'assemblyId', 'assemblyCategory', 'assemblyDescription'];
+            const validationMessage = document.getElementById('validationMessage');
+            
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    validationMessage.textContent = `Please fill in the ${field.previousElementSibling.textContent.replace(' *', '')}`;
+                    validationMessage.style.display = 'block';
+                    field.focus();
+                    return false;
+                }
+            }
+
+            // Validate BOM has at least one component with valid data
+            const bomRows = document.querySelectorAll('#bomTableBody tr');
+            let hasValidComponent = false;
+            
+            for (let row of bomRows) {
+                const id = row.querySelector('.component-id').value.trim();
+                const desc = row.querySelector('.component-desc').value.trim();
+                const price = parseFloat(row.querySelector('.component-price').value) || 0;
+                
+                if (id && desc && price > 0) {
+                    hasValidComponent = true;
+                    break;
+                }
+            }
+            
+            if (!hasValidComponent) {
+                validationMessage.textContent = 'Please add at least one valid component with ID, description, and price';
+                validationMessage.style.display = 'block';
+                return false;
+            }
+
+            validationMessage.style.display = 'none';
+            return true;
+        }
+
+        // Collect form data
+        function collectAssemblyData() {
+            const bomData = [];
+            const bomRows = document.querySelectorAll('#bomTableBody tr');
+            
+            bomRows.forEach(row => {
+                const id = row.querySelector('.component-id').value.trim();
+                const desc = row.querySelector('.component-desc').value.trim();
+                const qty = parseInt(row.querySelector('.component-qty').value) || 1;
+                const price = parseFloat(row.querySelector('.component-price').value) || 0;
+                
+                if (id && desc) {
+                    bomData.push({
+                        componentId: id,
+                        description: desc,
+                        quantity: qty,
+                        unitPrice: price,
+                        totalPrice: qty * price
+                    });
+                }
+            });
+
+            return {
+                assemblyName: document.getElementById('assemblyName').value.trim(),
+                assemblyId: document.getElementById('assemblyId').value.trim(),
+                category: document.getElementById('assemblyCategory').value,
+                description: document.getElementById('assemblyDescription').value.trim(),
+                applications: document.getElementById('assemblyApplications').value.trim(),
+                configuration: {
+                    voltage: document.getElementById('assemblyVoltage').value,
+                    phase: document.getElementById('assemblyPhase').value,
+                    enclosureType: document.getElementById('assemblyEnclosure').value,
+                    complexity: document.getElementById('assemblyComplexity').value
+                },
+                bomComponents: bomData,
+                totalPrice: parseFloat(document.getElementById('priceEstimate').textContent.replace('$', ''))
+            };
+        }
+
+        // Save new assembly
+        function saveNewAssembly() {
+            if (!validateForm()) {
+                return;
+            }
+
+            const assemblyData = collectAssemblyData();
+            const successMessage = document.getElementById('successMessage');
+            
+            // Check if Google Apps Script is available
+            if (typeof google !== 'undefined' && google.script) {
+                // Call backend to save the assembly
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        if (result.success) {
+                            successMessage.textContent = `Assembly "${assemblyData.assemblyName}" created successfully! It's now available in your component library.`;
+                            successMessage.style.display = 'block';
+                            
+                            // Clear form after successful save
+                            setTimeout(() => {
+                                clearForm();
+                                successMessage.style.display = 'none';
+                            }, 3000);
+                        } else {
+                            document.getElementById('validationMessage').textContent = 'Error saving assembly: ' + result.error;
+                            document.getElementById('validationMessage').style.display = 'block';
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        document.getElementById('validationMessage').textContent = 'Failed to save assembly: ' + error.message;
+                        document.getElementById('validationMessage').style.display = 'block';
+                    })
+                    .saveNewAssembly(assemblyData);
+            } else {
+                // Browser mode - simulate save
+                successMessage.textContent = `Assembly "${assemblyData.assemblyName}" would be created successfully! (Browser simulation mode)`;
+                successMessage.style.display = 'block';
+                console.log('Assembly data to save:', assemblyData);
+                
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Preview assembly
+        function previewAssembly() {
+            if (!validateForm()) {
+                return;
+            }
+
+            const assemblyData = collectAssemblyData();
+            let preview = `Assembly Preview:\n\n`;
+            preview += `Name: ${assemblyData.assemblyName}\n`;
+            preview += `ID: ${assemblyData.assemblyId}\n`;
+            preview += `Category: ${assemblyData.category}\n`;
+            preview += `Description: ${assemblyData.description}\n`;
+            preview += `Total Price: $${assemblyData.totalPrice.toFixed(2)}\n\n`;
+            preview += `Bill of Materials:\n`;
+            
+            assemblyData.bomComponents.forEach((comp, index) => {
+                preview += `${index + 1}. ${comp.componentId}: ${comp.description} (Qty: ${comp.quantity}, Price: $${comp.unitPrice})\n`;
+            });
+
+            alert(preview);
+        }
+
+        // Save as draft (simplified version)
+        function saveDraft() {
+            const assemblyData = collectAssemblyData();
+            localStorage.setItem('assemblyDraft', JSON.stringify(assemblyData));
+            
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = 'Draft saved locally';
+            successMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 2000);
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('assemblyForm').reset();
+            
+            // Reset BOM table to single row
+            const tbody = document.getElementById('bomTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td><input type="text" class="bom-input component-id" placeholder="e.g., A8066CHFL"></td>
+                    <td><input type="text" class="bom-input component-desc" placeholder="Component description"></td>
+                    <td><input type="number" class="bom-input component-qty" value="1" min="1"></td>
+                    <td><input type="number" class="bom-input component-price" placeholder="0.00" step="0.01"></td>
+                    <td class="total-cell">$0.00</td>
+                    <td><button type="button" class="remove-row" onclick="removeBomRow(this)">Remove</button></td>
+                </tr>
+            `;
+            
+            bomRowCount = 1;
+            updateTotalPrices();
+            
+            // Hide messages
+            document.getElementById('validationMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Load draft if available
+        window.addEventListener('load', function() {
+            const draft = localStorage.getItem('assemblyDraft');
+            if (draft) {
+                // Could implement draft loading here
+                console.log('Draft available:', JSON.parse(draft));
+            }
+            
+            // Initialize price calculation
+            updateTotalPrices();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>HCA Test</title>
+</head>
+<body>
+    <h1>🎯 HTML Loading Test</h1>
+    <p><strong>SUCCESS!</strong> If you can see this, Google Apps Script can load HTML files.</p>
+    <p>Current time: <span id="time"></span></p>
+    
+    <script>
+        // IMMEDIATE startup detection - fires as soon as script tag loads
+        console.log('🎯 TEST HTML - Script loading immediately!');
+        console.log('🎯 TEST HTML - Current time:', new Date().toISOString());
+        console.log('🎯 TEST HTML - Document ready state:', document.readyState);
+        console.log('🎯 TEST HTML - Google available:', typeof google !== 'undefined');
+        
+        document.getElementById('time').textContent = new Date().toLocaleString();
+        
+        // Test if this runs
+        setTimeout(function() {
+            console.log('🎯 TEST HTML - Timeout function executed successfully!');
+        }, 100);
+        
+        console.log('🎯 TEST HTML - Script completed successfully!');
+    </script>
+</body>
+</html>

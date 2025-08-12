@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>Customer Information</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Tahoma, sans-serif;
+            font-size: 11pt;
+            background: #ffffff;
+            color: #000000;
+            padding: 20px;
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .form-header h2 {
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 10pt;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Tahoma, sans-serif;
+            font-size: 10pt;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11pt;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .component-summary {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .component-summary h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .component-count {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h2>Customer Information</h2>
+            <p>Complete professional quote generation</p>
+        </div>
+
+        <div class="component-summary">
+            <h4>Quote Summary</h4>
+            <div class="component-count" id="componentCount">Loading...</div>
+            <div style="text-align: center; font-size: 10pt; color: #666; margin-top: 5px;">
+                Components Selected
+            </div>
+        </div>
+
+        <form id="customerForm">
+            <div class="form-group">
+                <label for="companyName">Company Name <span class="required">*</span></label>
+                <input type="text" id="companyName" name="companyName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="contactPerson">Contact Person</label>
+                <input type="text" id="contactPerson" name="contactPerson">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Shipping Address</label>
+                <textarea id="address" name="address" placeholder="Enter complete shipping address"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="projectName">Project Name <span class="required">*</span></label>
+                <input type="text" id="projectName" name="projectName" 
+                       placeholder="e.g., Brewery Control System" required>
+            </div>
+
+            <div class="status" id="statusMessage"></div>
+
+            <div class="button-group">
+                <button type="button" class="btn btn-primary" onclick="generateProfessionalQuote()">
+                    Generate Professional Quote
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="google.script.host.close()">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Load component count when dialog opens
+        window.onload = function() {
+            try {
+                // Get quote data from parent Hybrid Assembler
+                if (window.parent && window.parent.getQuoteData) {
+                    const quoteData = window.parent.getQuoteData();
+                    document.getElementById('componentCount').textContent = quoteData.components.length;
+                } else {
+                    document.getElementById('componentCount').textContent = '?';
+                }
+            } catch (error) {
+                document.getElementById('componentCount').textContent = '?';
+                console.error('Could not load component count:', error);
+            }
+        }
+
+        function generateProfessionalQuote() {
+            // Validate required fields
+            const companyName = document.getElementById('companyName').value.trim();
+            const projectName = document.getElementById('projectName').value.trim();
+            
+            if (!companyName) {
+                showStatus('Please enter the company name.', 'error');
+                return;
+            }
+            
+            if (!projectName) {
+                showStatus('Please enter a project name.', 'error');
+                return;
+            }
+
+            // Collect customer information
+            const customerInfo = {
+                companyName: companyName,
+                contactPerson: document.getElementById('contactPerson').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                address: document.getElementById('address').value.trim()
+            };
+
+            const projectInfo = {
+                projectName: projectName
+            };
+
+            // Show loading status
+            showStatus('Generating professional quote...', 'success');
+            
+            try {
+                // Get quote data from parent window (Hybrid Assembler)
+                if (window.parent && window.parent.getQuoteData) {
+                    const hybridData = window.parent.getQuoteData();
+                    hybridData.customerInfo = customerInfo;
+                    hybridData.projectInfo = projectInfo;
+                    
+                    // Generate the quote
+                    google.script.run
+                        .withSuccessHandler(onQuoteGenerated)
+                        .withFailureHandler(onQuoteError)
+                        .generateQuoteFromHybridData(hybridData);
+                } else {
+                    showStatus('Error: Could not access quote data from Hybrid Assembler', 'error');
+                }
+            } catch (error) {
+                showStatus('Error generating quote: ' + error.message, 'error');
+            }
+        }
+
+        function onQuoteGenerated(result) {
+            if (result.success) {
+                showStatus('SUCCESS! Quote ' + result.quoteNumber + ' generated!', 'success');
+                
+                // Show success message with details
+                setTimeout(() => {
+                    alert('Professional Quote Generated Successfully!\n\n' + 
+                          'Quote Number: ' + result.quoteNumber + '\n' +
+                          'Sheet Name: ' + result.sheetName + '\n\n' +
+                          'Your professional quote is ready for customer delivery!\n' +
+                          'Check the new sheet tab for the formatted quote.');
+                    google.script.host.close();
+                }, 1500);
+            } else {
+                showStatus('Error: ' + (result.error || 'Unknown error occurred'), 'error');
+            }
+        }
+
+        function onQuoteError(error) {
+            showStatus('System Error: ' + error.message, 'error');
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status status-' + type;
+            statusEl.style.display = 'block';
+            
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
