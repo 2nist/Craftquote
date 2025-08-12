@@ -1,0 +1,160 @@
+<!--
+  UI for the Master Catalog CSV Importer.
+  This HTML file provides a simple interface for users to upload a CSV file.
+  It sends the file content to CatalogImporter.gs for processing.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 24px;
+      color: #3c4043;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      color: #202124;
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+    p {
+      font-size: 14px;
+      color: #5f6368;
+      margin-bottom: 24px;
+    }
+    .file-upload-wrapper {
+      border: 2px dashed #dadce0;
+      border-radius: 8px;
+      padding: 30px;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .file-upload-wrapper:hover {
+      border-color: #4285f4;
+      background-color: #e8f0fe;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .upload-icon {
+      font-size: 48px;
+      color: #4285f4;
+    }
+    #fileName {
+      font-weight: 500;
+      margin-top: 16px;
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 24px;
+      width: 100%;
+      transition: background-color 0.2s;
+    }
+    button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 16px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Catalog CSV Importer</h1>
+    <p>Select your Master Catalog CSV file. The importer will add new parts and skip any duplicates.</p>
+
+    <label for="csvFile" class="file-upload-wrapper" id="dropZone">
+      <div class="upload-icon">📤</div>
+      <div>Click to select file</div>
+      <div id="fileName"></div>
+    </label>
+    <input type="file" id="csvFile" accept=".csv">
+
+    <button id="importButton" disabled>Import Parts</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('csvFile');
+    const importButton = document.getElementById('importButton');
+    const statusDiv = document.getElementById('status');
+    const fileNameDiv = document.getElementById('fileName');
+    const dropZone = document.getElementById('dropZone');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileNameDiv.textContent = fileInput.files[0].name;
+        importButton.disabled = false;
+      } else {
+        fileNameDiv.textContent = '';
+        importButton.disabled = true;
+      }
+    });
+
+    importButton.addEventListener('click', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      importButton.disabled = true;
+      statusDiv.textContent = 'Reading file...';
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        statusDiv.textContent = 'Importing... Please wait.';
+        google.script.run
+          .withSuccessHandler(response => {
+            if (response.success) {
+              statusDiv.style.color = '#1e8e3e';
+              statusDiv.textContent = response.message;
+              setTimeout(() => google.script.host.close(), 3000);
+            } else {
+              statusDiv.style.color = '#d93025';
+              statusDiv.textContent = response.message;
+              importButton.disabled = false;
+            }
+          })
+          .withFailureHandler(err => {
+            statusDiv.style.color = '#d93025';
+            statusDiv.textContent = `Error: ${err.message}`;
+            importButton.disabled = false;
+          })
+          .importCatalogFromCSV(e.target.result);
+      };
+      reader.onerror = () => {
+        statusDiv.textContent = 'Error reading file.';
+        importButton.disabled = false;
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>

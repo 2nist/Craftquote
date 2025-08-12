@@ -1,0 +1,237 @@
+<!--
+  UI for the File Transfer Wizard.
+  This HTML file provides a step-by-step interface for a user to select
+  a directory on a NAS and save a quote file.
+
+  NOTE: This is a scaffolded file. The UI is functional, but it
+  communicates with placeholder functions in FileWizard.gs.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 24px;
+      color: #3c4043;
+    }
+    .container { max-width: 100%; }
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      color: #202124;
+      margin-top: 0;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+    }
+    h1::before {
+      content: '📁';
+      margin-right: 10px;
+      font-size: 24px;
+    }
+    .wizard-step {
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #5f6368;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    #path-navigator {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .path-preview {
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #e8f0fe;
+      border: 1px solid #d2e3fc;
+      border-radius: 6px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      color: #1967d2;
+      word-wrap: break-word;
+    }
+    .button-container {
+      margin-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-right: 16px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>File Transfer Wizard</h1>
+    
+    <div class="wizard-step">
+      <label for="quoteNumber">1. Enter Quote Number to Save</label>
+      <input type="text" id="quoteNumber" placeholder="e.g., Q-12345">
+    </div>
+
+    <div class="wizard-step">
+      <label>2. Navigate to Target Directory</label>
+      <div id="path-navigator">
+        <!-- Dynamic select elements will be inserted here -->
+      </div>
+      <div class="path-preview" id="path-preview-container">
+        <label>Selected Path:</label>
+        <div id="finalPath">Z:\...</div>
+      </div>
+    </div>
+
+    <div class="button-container">
+      <div class="status" id="status"></div>
+      <button id="saveButton" disabled>Save to NAS</button>
+    </div>
+  </div>
+
+  <script>
+    let directoryStructure = {};
+    const pathNavigator = document.getElementById('path-navigator');
+    const finalPathDiv = document.getElementById('finalPath');
+    const saveButton = document.getElementById('saveButton');
+    const quoteNumberInput = document.getElementById('quoteNumber');
+    const statusDiv = document.getElementById('status');
+    const basePath = "Z:\\NAS_ROOT"; // Example base path
+
+    document.addEventListener('DOMContentLoaded', () => {
+      google.script.run
+        .withSuccessHandler(structure => {
+          directoryStructure = structure;
+          createNavigator(directoryStructure, []);
+        })
+        .getNasDirectoryStructure();
+    });
+
+    quoteNumberInput.addEventListener('input', checkFormValidity);
+
+    function createNavigator(currentLevel, path) {
+      pathNavigator.innerHTML = ''; // Clear existing dropdowns
+      let level = currentLevel;
+      
+      for (let i = 0; i < path.length; i++) {
+        const segment = path[i];
+        addSelectElement(Object.keys(level), path.slice(0, i), segment);
+        level = level[segment];
+      }
+
+      const nextDirs = Object.keys(level);
+      if (nextDirs.length > 0) {
+        addSelectElement(nextDirs, path, null);
+      }
+      updateFinalPath();
+    }
+
+    function addSelectElement(options, path, selectedValue) {
+      const select = document.createElement('select');
+      const placeholder = document.createElement('option');
+      placeholder.value = "";
+      placeholder.textContent = `--- Select Level ${path.length + 1} ---`;
+      placeholder.disabled = true;
+      select.appendChild(placeholder);
+
+      options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        if (option === selectedValue) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+      
+      if (!selectedValue) {
+        placeholder.selected = true;
+      }
+
+      select.addEventListener('change', (e) => {
+        const newPath = [...path, e.target.value];
+        let newLevel = directoryStructure;
+        newPath.forEach(p => newLevel = newLevel[p]);
+        createNavigator(directoryStructure, newPath);
+      });
+
+      pathNavigator.appendChild(select);
+    }
+
+    function updateFinalPath() {
+      const selectedPath = Array.from(pathNavigator.querySelectorAll('select'))
+        .map(s => s.value)
+        .filter(v => v); // Filter out empty/unselected values
+      
+      const pathString = selectedPath.join('\\');
+      finalPathDiv.textContent = `${basePath}\\${pathString}`;
+      checkFormValidity();
+    }
+
+    function checkFormValidity() {
+      const pathComplete = Array.from(pathNavigator.querySelectorAll('select')).every(s => s.value);
+      const quoteNumEntered = quoteNumberInput.value.trim() !== '';
+      saveButton.disabled = !(pathComplete && quoteNumEntered);
+    }
+
+    saveButton.addEventListener('click', () => {
+      saveButton.disabled = true;
+      statusDiv.textContent = 'Saving...';
+      
+      const finalPath = finalPathDiv.textContent;
+      const quoteNumber = quoteNumberInput.value.trim();
+
+      google.script.run
+        .withSuccessHandler(response => {
+          statusDiv.textContent = response.message;
+          if(response.success) {
+            setTimeout(() => google.script.host.close(), 2000);
+          } else {
+            saveButton.disabled = false;
+          }
+        })
+        .withFailureHandler(err => {
+          statusDiv.textContent = `Error: ${err.message}`;
+          saveButton.disabled = false;
+        })
+        .saveQuoteToNas(finalPath, quoteNumber);
+    });
+
+  </script>
+</body>
+</html>
