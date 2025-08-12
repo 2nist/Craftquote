@@ -413,6 +413,61 @@
             font-weight: 500;
         }
 
+        .info-value.clickable {
+            cursor: pointer;
+            color: #60a5fa;
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+
+        .info-value.clickable:hover {
+            color: #93c5fd;
+        }
+
+        .info-value.editable {
+            cursor: pointer;
+            color: #fbbf24;
+            border-bottom: 1px dashed #fbbf24;
+        }
+
+        .info-select {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            padding: 4px 8px;
+            font-size: 0.85em;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .info-select:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+
+        .info-input {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            padding: 4px 8px;
+            font-size: 0.85em;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .info-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+
+        .info-input::placeholder {
+            color: #64748b;
+            font-style: italic;
+        }
+
         /* Smart Suggestions */
         .smart-suggestions {
             background: rgba(16, 185, 129, 0.1);
@@ -499,8 +554,68 @@
                 <div class="quote-info">
                     <h3>Quote Configuration</h3>
                     <div class="info-grid">
+                        <div class="info-item">Quote #: <span class="info-value clickable" id="quoteNumber" onclick="generateNewQuoteNumber()">Click to Generate</span></div>
                         <div class="info-item">Product: <span class="info-value" id="productType">Select Template or Build Custom</span></div>
-                        <div class="info-item">Customer: <span class="info-value" id="customerName">TBD</span></div>
+                        <div class="info-item">Customer: <span class="info-value editable" id="customerName" onclick="editCustomerName()">TBD</span></div>
+                        <div class="info-item">Company: 
+                            <input type="text" class="info-input" id="companyCode" placeholder="Enter 2-letter code (e.g., MH)" maxlength="2" style="text-transform: uppercase; width: 80px;">
+                        </div>
+                        <div class="info-item">Category: 
+                            <select class="info-select" id="categoryCode">
+                                <option value="01">01 - New Build</option>
+                                <option value="02">02 - Mod/Upgrade/Change Order</option>
+                                <option value="03">03 - Part Order/Equipment</option>
+                                <option value="04">04 - Install/Commissioning</option>
+                                <option value="05">05 - Panel Build</option>
+                                <option value="06">06 - Warranty</option>
+                                <option value="07">07 - R&D</option>
+                                <option value="08">08 - Programming ONLY</option>
+                                <option value="09">09 - System Integration</option>
+                                <option value="10">10 - Engineering and Programming</option>
+                                <option value="11">11 - Evaluation</option>
+                                <option value="12">12 - Tech Support</option>
+                            </select>
+                        </div>
+                        <div class="info-item">Product Code: 
+                            <select class="info-select" id="productCode">
+                                <option value="BHMC">BHMC - Brewhouse Manual Control</option>
+                                <option value="BHAC">BHAC - Brewhouse Automated Control Panel</option>
+                                <option value="DTMC">DTMC - Manual Still Control</option>
+                                <option value="BHMC">BHMC - Brewhouse Gas Control Panel</option>
+                                <option value="BHMC">BHMC - Brewhouse Gas/Electric Control Panel</option>
+                                <option value="BHMC">BHMC - Heater Control Panel</option>
+                                <option value="CPMC">CPMC - CIP Manual Control Panel</option>
+                                <option value="CPAC">CPAC - CIP Automated Control Panel</option>
+                                <option value="KWCP">KWCP - Keg Washer Control Panel</option>
+                                <option value="DTAC">DTAC - Automated Still Control Panel</option>
+                                <option value="CRAC">CRAC - Automated Cellar Control Panel</option>
+                                <option value="STCS">STCS - Simple Single Tank Controller</option>
+                                <option value="STAC">STAC - Advanced Single Tank Controller</option>
+                                <option value="GHAC">GHAC - Grain Handling Automated Control Panel</option>
+                                <option value="GHMC">GHMC - Grain Handling Manual Control Panel</option>
+                                <option value="SSMS">SSMS - Start/Stop Non-Fused Motor Control Panel</option>
+                                <option value="SSFMS">SSFMS - Start/Stop Fused Motor Control Panel</option>
+                                <option value="SSVS">SSVS - Start/Stop Non-Fused VFD Control Panel</option>
+                                <option value="SSFVS">SSFVS - Start/Stop Fused VFD Control Panel</option>
+                                <option value="SSPS">SSPS - Start/Stop Pneumatic Control Panel</option>
+                                <option value="EQPT">EQPT - Equipment/Part</option>
+                                <option value="WARR">WARR - Warranty Part Order</option>
+                                <option value="ENPR">ENPR - Engineering/Programming</option>
+                                <option value="PMOD">PMOD - Panel Modification</option>
+                                <option value="SINT">SINT - System Integration</option>
+                                <option value="CMSN">CMSN - Onsite Commissioning</option>
+                                <option value="INST">INST - Onsite Installation</option>
+                                <option value="TECH">TECH - Tech Support</option>
+                                <option value="DYAC">DYAC - Dairy Automated Control Panel</option>
+                                <option value="FGHT">FGHT - Freight Service</option>
+                                <option value="FBAC">FBAC - Food/Beverage Automated Control</option>
+                                <option value="INMT">INMT - Installation Materials</option>
+                                <option value="DATA">DATA - Data Management Integration</option>
+                                <option value="DAHD">DAHD - Data Specific Hard/Software</option>
+                                <option value="HTMC">HTMC - Heater Control Panel</option>
+                                <option value="PNLB">PNLB - Panel Build</option>
+                            </select>
+                        </div>
                         <div class="info-item">Voltage: <span class="info-value" id="systemVoltage">480V</span></div>
                         <div class="info-item">Components: <span class="info-value" id="componentCount">0</span></div>
                     </div>
@@ -921,6 +1036,81 @@
             
             // Update interface based on mode
             updateInterface();
+        }
+
+        // Quote Number Generation - Format: CQ[YY][MM][DD][Category][Product][Company-Sequence]
+        function generateNewQuoteNumber() {
+            const now = new Date();
+            const year = now.getFullYear().toString().slice(-2); // YY
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // MM
+            const day = String(now.getDate()).padStart(2, '0'); // DD
+            
+            // Get values from selectors
+            const categoryCode = document.getElementById('categoryCode').value;
+            let companyCode = document.getElementById('companyCode').value;
+            const productCode = document.getElementById('productCode').value;
+            
+            // Validate company code (must be exactly 2 letters)
+            if (!companyCode || companyCode.length !== 2) {
+                companyCode = 'XX'; // Placeholder until user enters valid 2-letter code
+            }
+            
+            // Generate sequence number (you might want to track this globally or get from backend)
+            const sequence = '00';
+            
+            // Construct quote number: CQ[YY][MM][DD][Category][Product][Company-Sequence]
+            const quoteNumber = `CQ${year}${month}${day}${categoryCode}${productCode}${companyCode}-${sequence}`;
+            
+            // Update display
+            document.getElementById('quoteNumber').textContent = quoteNumber;
+            
+            // Store in quoteData
+            if (typeof quoteData !== 'undefined') {
+                quoteData.quoteNumber = quoteNumber;
+                quoteData.category = categoryCode;
+                quoteData.company = companyCode;
+                quoteData.productCode = productCode;
+                quoteData.generatedDate = now.toISOString();
+            }
+            
+            console.log('Generated quote number:', quoteNumber);
+            return quoteNumber;
+        }
+
+        // Edit customer name
+        function editCustomerName() {
+            const currentName = document.getElementById('customerName').textContent;
+            const newName = prompt('Enter customer name:', currentName === 'TBD' ? '' : currentName);
+            
+            if (newName !== null && newName.trim() !== '') {
+                document.getElementById('customerName').textContent = newName.trim();
+                if (typeof quoteData !== 'undefined') {
+                    quoteData.customerName = newName.trim();
+                }
+            }
+        }
+
+        // Auto-generate quote number when category or company changes
+        function setupQuoteNumberAutoGeneration() {
+            const categorySelect = document.getElementById('categoryCode');
+            const companyInput = document.getElementById('companyCode');
+            
+            categorySelect.addEventListener('change', () => {
+                if (document.getElementById('quoteNumber').textContent !== 'Click to Generate') {
+                    generateNewQuoteNumber();
+                }
+            });
+            
+            companyInput.addEventListener('input', (e) => {
+                // Convert to uppercase and limit to letters only
+                let value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                if (value.length > 2) value = value.substring(0, 2);
+                e.target.value = value;
+                
+                if (document.getElementById('quoteNumber').textContent !== 'Click to Generate') {
+                    generateNewQuoteNumber();
+                }
+            });
         }
 
         function updateInterface() {
@@ -1564,6 +1754,26 @@
             } else {
                 console.log('🎯 BACKEND TEST - Skipped (not in Google Apps Script environment)');
             }
+            
+            // Auto-generate quote number when page loads
+            console.log('🎯 Auto-generating quote number on page load...');
+            generateNewQuoteNumber();
+            
+            // Set up event listeners for category and company changes to regenerate quote number
+            document.getElementById('categoryCode').addEventListener('change', function() {
+                console.log('Category changed, regenerating quote number...');
+                generateNewQuoteNumber();
+            });
+            
+            document.getElementById('companyCode').addEventListener('input', function(e) {
+                // Convert to uppercase and limit to 2 characters
+                let value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                if (value.length > 2) value = value.substring(0, 2);
+                e.target.value = value;
+                
+                console.log('Company changed, regenerating quote number...');
+                generateNewQuoteNumber();
+            });
         }, 100);
     </script>
 </body>
