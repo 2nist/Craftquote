@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Roboto', sans-serif; background: #f8f9fa; margin: 0; padding: 24px; color: #3c4043; }
+    .container { max-width: 420px; margin: 0 auto; }
+    h1 { font-size: 20px; font-weight: 500; margin: 0 0 12px; }
+    label { display:block; font-size: 13px; margin: 14px 0 6px; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; }
+    .row { display:flex; gap:10px; }
+    button { background:#4285f4; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-size:14px; }
+    button:disabled { background:#e0e0e0; cursor:not-allowed; }
+    .inline { display:inline-flex; align-items:center; gap:8px; }
+    .status { margin-top: 12px; min-height: 20px; font-size: 13px; }
+    .tip { font-size: 12px; color:#5f6368; }
+    .divider { height: 1px; background: #e0e0e0; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload Quote to Pipedrive</h1>
+
+    <div id="tokenSection">
+      <label>Pipedrive API Token</label>
+      <input type="password" id="token" placeholder="paste token (once)">
+      <div class="inline">
+        <button id="saveTokenBtn">Save Token</button>
+        <span class="tip">Find in Pipedrive: Settings → Personal preferences → API</span>
+      </div>
+      <div class="divider"></div>
+    </div>
+
+    <label>Deal ID</label>
+    <input type="text" id="dealId" placeholder="e.g., 1234">
+
+    <label>File Name (optional, no extension)</label>
+    <input type="text" id="fileName" placeholder="e.g., Quote-Q-12345">
+
+    <div class="inline" style="margin-top: 16px;">
+      <button id="uploadBtn">Upload PDF</button>
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const tokenInput = document.getElementById('token');
+    const saveTokenBtn = document.getElementById('saveTokenBtn');
+    const dealIdInput = document.getElementById('dealId');
+    const fileNameInput = document.getElementById('fileName');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const statusDiv = document.getElementById('status');
+    const tokenSection = document.getElementById('tokenSection');
+
+    google.script.run.withSuccessHandler(has => {
+      if (has) tokenSection.style.display = 'none';
+    }).hasPipedriveToken();
+
+    saveTokenBtn.addEventListener('click', () => {
+      const token = tokenInput.value.trim();
+      if (!token) return;
+      statusDiv.textContent = 'Saving token...';
+      google.script.run.withSuccessHandler(r => {
+        statusDiv.textContent = r.message;
+        tokenSection.style.display = 'none';
+      }).withFailureHandler(err => {
+        statusDiv.textContent = 'Error: ' + err.message;
+      }).savePipedriveToken(token);
+    });
+
+    uploadBtn.addEventListener('click', () => {
+      const dealId = dealIdInput.value.trim();
+      const fileName = fileNameInput.value.trim();
+      if (!dealId) { statusDiv.textContent = 'Deal ID is required.'; return; }
+      statusDiv.textContent = 'Uploading...';
+      google.script.run.withSuccessHandler(r => {
+        statusDiv.textContent = r.message;
+        if (r.success) setTimeout(() => google.script.host.close(), 2000);
+      }).withFailureHandler(err => {
+        statusDiv.textContent = 'Error: ' + err.message;
+      }).uploadPdfToPipedrive(dealId, fileName);
+    });
+  </script>
+</body>
+</html>

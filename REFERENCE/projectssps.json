@@ -1,0 +1,25 @@
+{
+  "projectName": "Prison City Load Cell Motor Control Panel",
+  "panelType": "SSMS",
+  "oem": "Malt Handling",
+  "basedOn": "SSMS",
+  "variation": "Start/Stop motor control with load cell integration and time delay, designed for single-source takeaway from silo",
+  "quoteId": "CQ22012601SSXSMH-00",
+  "date": "2023-04-11",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "SSMS-LC-PS", "description": "Load Cell Start/Stop Motor Control (up to 3HP), includes SCT-10, IP67 enclosure, and time delay", "qty": 1, "section": "Motor Control" },
+    { "partNumber": "Proximity Sensor Integration", "description": "Prox switch programming and wiring (3rd party sensors)", "qty": 2, "section": "Sensors" }
+  ],
+  "notes": "This is a load cell-triggered auger control panel designed for takeaway systems on silos. Features include automatic motor cutoff based on load cell signal, pneumatic control integration, conveyance delay, and emergency stop. Configuration includes SCT-10 transmitter, safety labeling, and proximity logic.",
+  "files": {
+    "bom": [
+      "CA23604801MSMH BOM.XLSX"
+    ],
+    "quote": "CQ22012601SSXSMH-00 SSXS Master Quote (2022).pdf",
+    "purchaseOrder": "PO_6048_from_MaltHandling.com_LLC_9868.pdf",
+    "config": "MH [6048] Prison City SSMS-LC Config.pdf"
+  }
+}

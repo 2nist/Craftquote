@@ -83,6 +83,8 @@
       font-size: 14px;
       min-height: 20px;
     }
+    .option-row { margin-top: 12px; text-align: left; }
+    .option-row label { font-size: 13px; color: #3c4043; }
   </style>
 </head>
 <body>
@@ -97,6 +99,12 @@
     </label>
     <input type="file" id="csvFile" accept=".csv">
 
+    <div class="option-row">
+      <label>
+        <input type="checkbox" id="updateExisting"> Update existing parts if PART# already exists
+      </label>
+    </div>
+
     <button id="importButton" disabled>Import Parts</button>
     <div id="status"></div>
   </div>
@@ -107,6 +115,7 @@
     const statusDiv = document.getElementById('status');
     const fileNameDiv = document.getElementById('fileName');
     const dropZone = document.getElementById('dropZone');
+    const updateExisting = document.getElementById('updateExisting');
 
     dropZone.addEventListener('click', () => fileInput.click());
 
@@ -125,6 +134,7 @@
       if (!file) return;
 
       importButton.disabled = true;
+      statusDiv.style.color = '#3c4043';
       statusDiv.textContent = 'Reading file...';
 
       const reader = new FileReader();
@@ -147,9 +157,10 @@
             statusDiv.textContent = `Error: ${err.message}`;
             importButton.disabled = false;
           })
-          .importCatalogFromCSV(e.target.result);
+          .importCatalogFromCSV(e.target.result, updateExisting.checked);
       };
       reader.onerror = () => {
+        statusDiv.style.color = '#d93025';
         statusDiv.textContent = 'Error reading file.';
         importButton.disabled = false;
       };

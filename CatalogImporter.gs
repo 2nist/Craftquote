@@ -12,19 +12,20 @@
  */
 function showCatalogImporter() {
   const html = HtmlService.createHtmlOutputFromFile('CatalogImporter')
-    .setWidth(500)
-    .setHeight(400);
+    .setWidth(600)
+    .setHeight(520);
   SpreadsheetApp.getUi().showModalDialog(html, '🗂️ Master Catalog CSV Importer');
 }
 
 /**
  * Imports catalog data from a user-provided CSV file.
- * It checks for existing PART# to avoid duplicates.
+ * It checks for existing PART# to avoid duplicates and can optionally update existing rows.
  *
  * @param {string} csvData The raw text content of the CSV file.
- * @returns {object} A result object with counts of added and skipped items.
+ * @param {boolean} updateExisting When true, rows with existing PART# will be updated instead of skipped.
+ * @returns {object} A result object with counts of added/updated/skipped items.
  */
-function importCatalogFromCSV(csvData) {
+function importCatalogFromCSV(csvData, updateExisting) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName('Master Catalog');
@@ -32,62 +33,152 @@ function importCatalogFromCSV(csvData) {
       throw new Error("'Master Catalog' sheet not found. Please run the initial setup first.");
     }
 
-    // Get existing PART#s to prevent duplicates
-    const existingPartNumbers = new Set();
-    const partNumberColumn = 4; // Column D is PART#
-    const range = sheet.getRange(2, partNumberColumn, sheet.getLastRow() - 1, 1);
-    range.getValues().forEach(row => {
-      if (row[0]) {
-        existingPartNumbers.add(row[0].toString().trim());
-      }
-    });
+    const sheetHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => (h || '').toString().trim());
+    const headerIndex = {};
+    sheetHeaders.forEach((name, idx) => headerIndex[name.toUpperCase()] = idx);
 
+    // Helper to get column index by canonical header key; falls back if sheet changed order
+    function colIndex(key) {
+      const i = headerIndex[key.toUpperCase()];
+      if (i === undefined) throw new Error(`Required column '${key}' not found in Master Catalog sheet.`);
+      return i;
+    }
+
+    const idxYN = colIndex('yn');
+    const idxPART = colIndex('PART');
+    const idxDESCRIPTION = colIndex('DESCRIPTION');
+    const idxPARTNUM = colIndex('PART#');
+    const idxVNDR = colIndex('VNDR');
+    const idxVNDRNUM = colIndex('VNDR#');
+    const idxCOST = colIndex('COST');
+    const idxQTY = colIndex('QTY');
+    const idxUNIT = colIndex('UNIT');
+    const idxLEAD = colIndex('LEAD');
+    const idxMOQ = colIndex('MOQ');
+    const idxNOTES = colIndex('NOTES');
+    const idxCATEGORY = colIndex('CATEGORY');
+    const idxUPDATED = colIndex('UPDATED');
+    const idxSOURCE = colIndex('SOURCE');
+    const idxMANUAL = colIndex('MANUAL');
+
+    // Build map of existing PART# -> rowIndex (1-based in sheet)
+    const lastRow = sheet.getLastRow();
+    const partNumCol = idxPARTNUM + 1; // to A1 index
+    const existingMap = new Map();
+    if (lastRow > 1) {
+      const partRange = sheet.getRange(2, partNumCol, lastRow - 1, 1).getValues();
+      for (let i = 0; i < partRange.length; i++) {
+        const v = (partRange[i][0] || '').toString().trim();
+        if (v) existingMap.set(v, i + 2); // actual row number
+      }
+    }
+
+    // Parse CSV
     const data = Utilities.parseCsv(csvData);
-    if (data.length < 2) {
-      return { success: true, added: 0, skipped: 0, message: "CSV file is empty or contains only headers." };
+    if (!data || data.length < 2) {
+      return { success: true, added: 0, updated: 0, skipped: 0, message: 'CSV is empty or missing data rows.' };
     }
 
-    const headers = data[0].map(h => h.trim().toUpperCase());
-    const partNumHeaderIndex = headers.indexOf('PART#');
-    if (partNumHeaderIndex === -1) {
-      throw new Error("CSV must contain a 'PART#' column.");
+    const csvHeadersRaw = data[0];
+    const csvHeaders = csvHeadersRaw.map(h => (h || '').toString().trim());
+
+    // Header alias mapping
+    const aliases = new Map([
+      ['yn', ['yn', 'include', 'active']],
+      ['PART', ['part', 'department', 'class', 'category top', 'group']],
+      ['DESCRIPTION', ['description', 'desc', 'item description', 'name', 'item name']],
+      ['PART#', ['part#', 'part number', 'sku', 'sku#', 'mpn', 'mfr part#', 'manufacturer part #', 'item#']],
+      ['VNDR', ['vndr', 'vendor', 'manufacturer', 'brand', 'mfr']],
+      ['VNDR#', ['vndr#', 'vendor#', 'vendor part#', 'mfr#', 'mfr part#']],
+      ['COST', ['cost', 'price', 'unit cost', 'unit price', 'list price', 'base cost']],
+      ['QTY', ['qty', 'quantity', 'stock qty', 'order qty']],
+      ['UNIT', ['unit', 'uom', 'unit of measure']],
+      ['LEAD', ['lead', 'lead time', 'leadtime']],
+      ['MOQ', ['moq', 'minimum order', 'min order qty']],
+      ['NOTES', ['notes', 'note', 'comments', 'comment']],
+      ['CATEGORY', ['category', 'product category', 'class']]
+    ]);
+
+    // Build mapping from CSV column index -> target sheet column index
+    const csvToSheetCol = new Map();
+    for (let i = 0; i < csvHeaders.length; i++) {
+      const h = csvHeaders[i].toLowerCase();
+      for (const [target, list] of aliases.entries()) {
+        if (list.some(alias => alias.toLowerCase() === h)) {
+          csvToSheetCol.set(i, colIndex(target));
+          break;
+        }
+      }
     }
 
-    const newRows = [];
-    let addedCount = 0;
-    let skippedCount = 0;
+    function toNumber(val) {
+      if (val === null || val === undefined) return '';
+      const s = val.toString().replace(/[$,\s]/g, '');
+      const n = parseFloat(s);
+      return isNaN(n) ? '' : n;
+    }
 
-    // Start from row 1 to skip header row of CSV
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      const partNumber = row[partNumHeaderIndex] ? row[partNumHeaderIndex].toString().trim() : '';
+    const now = new Date();
+    const results = { success: true, added: 0, updated: 0, skipped: 0 };
+    const toAppend = [];
 
-      if (!partNumber) {
-        skippedCount++;
-        continue; // Skip rows without a part number
+    // Track duplicates within the same CSV import
+    const seenInCsv = new Set();
+
+    for (let r = 1; r < data.length; r++) {
+      const row = data[r];
+      if (!row || row.length === 0) { results.skipped++; continue; }
+
+      // Build a target row initialized with blanks
+      const targetRow = new Array(sheetHeaders.length).fill('');
+
+      // Defaults
+      targetRow[idxYN] = 'Y';
+      targetRow[idxQTY] = 1;
+      targetRow[idxUPDATED] = now;
+      targetRow[idxSOURCE] = updateExisting ? 'CSV Import (update allowed)' : 'CSV Import';
+      targetRow[idxMANUAL] = '';
+
+      // Map CSV fields → target columns
+      for (let c = 0; c < row.length; c++) {
+        const targetIdx = csvToSheetCol.get(c);
+        if (targetIdx === undefined) continue;
+        let val = row[c];
+        if (targetIdx === idxCOST) val = toNumber(val);
+        if (targetIdx === idxQTY) val = toNumber(val) || 1;
+        targetRow[targetIdx] = val;
       }
 
-      if (existingPartNumbers.has(partNumber)) {
-        skippedCount++;
+      const partNumber = (targetRow[idxPARTNUM] || '').toString().trim();
+      if (!partNumber) { results.skipped++; continue; }
+
+      if (seenInCsv.has(partNumber)) { results.skipped++; continue; }
+      seenInCsv.add(partNumber);
+
+      // Existing?
+      const existingRow = existingMap.get(partNumber);
+      if (existingRow) {
+        if (updateExisting) {
+          // Write back the entire row (respecting sheet header length)
+          targetRow[idxUPDATED] = new Date();
+          targetRow[idxSOURCE] = 'CSV Import (updated)';
+          sheet.getRange(existingRow, 1, 1, sheetHeaders.length).setValues([targetRow]);
+          results.updated++;
+        } else {
+          results.skipped++;
+        }
       } else {
-        // This assumes the CSV columns are in the same order as the sheet.
-        // A more robust implementation would map CSV headers to sheet headers.
-        newRows.push(row);
-        existingPartNumbers.add(partNumber); // Add to set to handle duplicates within the CSV itself
-        addedCount++;
+        toAppend.push(targetRow);
       }
     }
 
-    if (newRows.length > 0) {
-      sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, newRows[0].length).setValues(newRows);
+    if (toAppend.length > 0) {
+      sheet.getRange(sheet.getLastRow() + 1, 1, toAppend.length, sheetHeaders.length).setValues(toAppend);
+      results.added += toAppend.length;
     }
 
-    return {
-      success: true,
-      added: addedCount,
-      skipped: skippedCount,
-      message: `Import complete. Added: ${addedCount}, Skipped (duplicates or empty): ${skippedCount}.`
-    };
+    const message = `Import complete. Added: ${results.added}, Updated: ${results.updated}, Skipped: ${results.skipped}.`;
+    return Object.assign(results, { message });
 
   } catch (e) {
     Logger.log('Error in importCatalogFromCSV: ' + e.message);

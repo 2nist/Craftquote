@@ -1,0 +1,41 @@
+{
+  "projectName": "Rosedale Automated Distillation Control",
+  "panelType": "DTAC",
+  "oem": "Allied Beverage Tanks",
+  "basedOn": "DTAC",
+  "variation": "Automated still control with remote HMI panels, proportional valve steam/cooling regulation, alarm IO, VFD drive integration, and no maintenance control loop",
+  "quoteId": "CQ24031201DTABT-00",
+  "date": "2024-05-16",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "IDEC FC6A", "description": "PLC system with analog/digital IO", "qty": 1, "section": "Automation" },
+    { "partNumber": "15\" Touchscreen", "description": "Full color HMI (x2, remote enclosures)", "qty": 2, "section": "HMI" },
+    { "partNumber": "ABB VFDs", "description": "10HP + 3HP VFDs with STO, fault logs, runtime feedback", "qty": 2, "section": "Motor Drives" },
+    { "partNumber": "RTD w/ 4–20mA", "description": "6 high-accuracy analog temperature sensors", "qty": 6, "section": "Sensors" },
+    { "partNumber": "Digital Level Sensors", "description": "2 sanitary point-level switches", "qty": 2, "section": "Sensors" },
+    { "partNumber": "Analog Pressure Transducer", "description": "1 vapor pressure transducer", "qty": 1, "section": "Sensors" },
+    { "partNumber": "Pressure/Temp Switches", "description": "Overtemp, overpressure, condenser temp", "qty": 3, "section": "Alarms" },
+    { "partNumber": "Modulating Valves", "description": "3 cooling + 1 steam (4–20mA, proportional)", "qty": 4, "section": "Valves" },
+    { "partNumber": "On/Off Glycol Valves", "description": "3x 2-way NPT spring return cooling valves", "qty": 3, "section": "Valves" },
+    { "partNumber": "LED Control Circuits", "description": "3 light assemblies for vessel zones", "qty": 3, "section": "Indicators" },
+    { "partNumber": "Aux Alarm Contact", "description": "Dry contact for future or external alarm triggering", "qty": 1, "section": "Alarms" }
+  ],
+  "notes": "System uses a single-target 'one shot' thermal control logic. Heating/cooling is disabled once the temp is reached; no reengagement is triggered unless the user sets a new target. Designed to reduce sensor noise and wiring complexity. Two HMI enclosures support full remote interaction. CAD and quote files include internal relay structure and remote input/output mapping.",
+  "files": {
+    "bom": [
+      "CA2417CA01DTACAB BOM.xlsx"
+    ],
+    "quote": "CQ24031201DTABT-00 Steam Still Control (Automated).pdf",
+    "cad": [
+      "CA2417CA01DTACAB-MCC CAD As Designed.pdf",
+      "CA2417CA01DTACAB-REM1 CAD As Designed.pdf",
+      "CA2417CA01DTACAB-REM2 CAD As Designed.pdf"
+    ],
+    "reference": [
+      "ABT Rosedale Heating & Cooling Process.pdf",
+      "1666a49e-f72c-4067-b9e7-3b6cab272d93.pdf"
+    ]
+  }
+}

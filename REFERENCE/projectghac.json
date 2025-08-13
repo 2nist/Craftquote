@@ -1,0 +1,34 @@
+{
+  "projectName": "Rosedale Automated Grain Handling Panel",
+  "panelType": "GHAC",
+  "oem": "Malt Handling",
+  "basedOn": "GHAC",
+  "variation": "Full process automation with 4 load cell interfaces, 5 pneumatic gates, 4 motor assemblies (2 standard, 2 VFD), remote HMI, and pressurization for Class II Div II",
+  "quoteId": "CQ24101101GHACMH-00",
+  "date": "2024-10-14",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "IDEC FC6A", "description": "Integrated PLC with 12.1\" touchscreen", "qty": 1, "section": "Automation" },
+    { "partNumber": "Load Cell Interface", "description": "Signal conditioner w/ peak, gross, net logic", "qty": 4, "section": "Measurement" },
+    { "partNumber": "Solenoid Gate Assemblies", "description": "K600 Pneumatic gate solenoids + prox sensors", "qty": 5, "section": "Pneumatics" },
+    { "partNumber": "1.5HP Motor Assemblies", "description": "Silo and Mill Chain Disk Motors", "qty": 2, "section": "Motor Control" },
+    { "partNumber": "3HP & 10HP VFDs", "description": "Batch Hopper and Hammer Mill VFDs (Ethernet + STO)", "qty": 2, "section": "Motor Control" },
+    { "partNumber": "Remote HMI Panel", "description": "Secondary enclosure w/ Ethernet switch, E-stop, control LED", "qty": 1, "section": "HMI" },
+    { "partNumber": "Panel Pressurization", "description": "Class II Div II pressurization system", "qty": 1, "section": "Enclosure" }
+  ],
+  "notes": "This GHAC panel features full process automation, including batch monitoring, trend logging, VPN remote access, and recipe tracking. Includes remote HMI with pressure-rated enclosure, designed with future silo expansion in mind. Load cells and pneumatic gates interface with 24VDC logic. Panel adheres to UL508a, with MCC and REM CAD sets provided.",
+  "files": {
+    "bom": [
+      "CA24645901GHACMH As Built BOM.xlsx"
+    ],
+    "quote": "CQ24101101GHACMH-00 (Rosedale).pdf",
+    "cad": [
+      "CA24645901GHACMH-MMC CAD As Designed.pdf",
+      "CA24645901GHACMH-REM CAD As Designed.pdf"
+    ],
+    "purchaseOrder": "PO_6459_from_MaltHandling.com_LLC_26796.pdf",
+    "config": "[PO-6459]-MH-Rosedale-GHAC_Config.pdf"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "projectName": "St. James Brewery Chain Disk VFD Panel",
+  "panelType": "GHMC",
+  "oem": "RMS Roller-Grinder",
+  "basedOn": "GHMC",
+  "variation": "Manual VFD enclosure for 3HP grain chain disk conveyor with remote support and keypad",
+  "quoteId": "CQ23030201SSXSRMS-00",
+  "date": "2023-10-30",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "3.0VFD", "description": "3HP VFD, 208–230V, with remote keypad and selector switch", "qty": 1, "section": "Motor Control" },
+    { "partNumber": "NEMA 4 Enclosure", "description": "Powder-coated, fused, outdoor-rated panel", "qty": 1, "section": "Enclosure" }
+  ],
+  "notes": "No PLC or logic included. Standalone VFD enclosure to drive one chain disk conveyor. Includes remote keypad, fused disconnect, support programming, and IP-rated housing. Built to UL508a and sold through RMS to St. James Brewery. Minimal control, no sensors or pneumatics.",
+  "files": {
+    "bom": [
+      "CA23447601VSRM As Built BOM.xlsx"
+    ],
+    "quote": "St. James Brewery CQ23030201SSXSRMS-00 SSXS Master Quote (2023).xlsx",
+    "purchaseOrder": "PO_34476_from_RMS_RollerGrinder_12004.pdf",
+    "config": "RMS [34476] St. James Config.pdf"
+  }
+}

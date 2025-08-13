@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🚀 SIMPLE REAL DATA TEST</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+        }
+        .component { 
+            background: #333; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border-left: 4px solid #00ff00;
+        }
+        button { 
+            background: #007acc; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+        button:hover { background: #005a9e; }
+    </style>
+</head>
+<body>
+    <h1>🚀 DIRECT MASTER CATALOG ACCESS</h1>
+    <p>This bypasses all the complex template logic and directly shows your real data.</p>
+    
+    <button onclick="loadRealData()">🎯 LOAD REAL COMPONENTS NOW</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function loadRealData() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading real data from Master Catalog...</p>';
+            
+            try {
+                // Direct call to get individual components we know exist
+                const components = ['A8066CHFL', 'A10106CHFL'];
+                let html = '<h2>✅ REAL COMPONENTS FROM YOUR MASTER CATALOG:</h2>';
+                
+                for (const componentId of components) {
+                    try {
+                        const result = await new Promise((resolve, reject) => {
+                            google.script.run
+                                .withSuccessHandler(resolve)
+                                .withFailureHandler(reject)
+                                .getComponentDetails(componentId);
+                        });
+                        
+                        if (result && !result.isPlaceholder) {
+                            html += `
+                                <div class="component">
+                                    <h3>${result.name}</h3>
+                                    <p><strong>Price:</strong> $${result.price}</p>
+                                    <p><strong>Description:</strong> ${result.description || 'N/A'}</p>
+                                    <p><strong>Category:</strong> ${result.category || 'N/A'}</p>
+                                    <p><strong>Source:</strong> ${result.source}</p>
+                                    <p><strong>Status:</strong> ✅ REAL DATA (Not Mock)</p>
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="component" style="border-left-color: red;">
+                                    <h3>${componentId}</h3>
+                                    <p>❌ Not found or placeholder data</p>
+                                </div>
+                            `;
+                        }
+                    } catch (error) {
+                        html += `
+                            <div class="component" style="border-left-color: red;">
+                                <h3>${componentId}</h3>
+                                <p>❌ Error: ${error.message}</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

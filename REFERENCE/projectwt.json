@@ -1,0 +1,32 @@
+{
+  "projectName": "Big Grove Brewery Water Treatment Panel",
+  "panelType": "WT",
+  "oem": "First Key",
+  "basedOn": "WT",
+  "variation": "Dual 7.5HP RO pump VFDs with panel-integrated system fault logic, spare pneumatics, LED indicators, safety relay interlock, and future IO expansion",
+  "quoteId": null,
+  "date": "2024-03-15",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "VFD-7.5HP", "description": "2x 7.5HP 480V 3PH drives with STO and analog control", "qty": 2, "section": "Motor Control" },
+    { "partNumber": "IDEC FC6A", "description": "Compact PLC with digital and relay IO", "qty": 1, "section": "Automation" },
+    { "partNumber": "Safety Relay", "description": "System interlock for E-Stop and external safety loop", "qty": 1, "section": "Safety" },
+    { "partNumber": "Solenoid Outputs", "description": "Pneumatic valve control for inlet and return loop", "qty": 2, "section": "Pneumatics" },
+    { "partNumber": "Pilot LEDs", "description": "System fault and status indication", "qty": 3, "section": "Indicators" },
+    { "partNumber": "Class R + CC Fusing", "description": "1A/1.5A/8A circuits for relay, IO, and VFD protection", "qty": 6, "section": "Power Protection" }
+  ],
+  "notes": "WT panel controls two 7.5HP RO pump motors using VFDs. Includes PLC control, future IO mapped on TBs, and panel-mounted LED fault logic. Fully UL508A with 5kA SCCR. Three revisions captured: design (First Key), as-built (Big Grove), and onsite final (April 2024).",
+  "files": {
+    "bom": [
+      "CA23071009WTBG BOM.xlsx",
+      "CA23071009WTBG As Built BOM.xlsx"
+    ],
+    "cad": [
+      "CA23071009WTBG CAD As Built.pdf",
+      "CA23071009WTBG As Designed.pdf",
+      "CA23071009WTBG Onsite 4.16.2024.pdf"
+    ]
+  }
+}

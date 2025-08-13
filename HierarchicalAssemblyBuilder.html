@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hierarchical Assembly Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .workflow-stages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .workflow-stage {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+        
+        .workflow-stage:hover {
+            border-color: #ffd700;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .workflow-stage.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+        }
+        
+        .stage-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .stage-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+        
+        .stage-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+        }
+        
+        .panel h3 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #ffd700;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .parts-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .part-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.3s ease;
+        }
+        
+        .part-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .part-item:last-child {
+            border-bottom: none;
+        }
+        
+        .part-checkbox {
+            transform: scale(1.3);
+        }
+        
+        .part-details {
+            flex: 1;
+        }
+        
+        .part-name {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+        
+        .part-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+        
+        .part-price {
+            font-size: 0.9rem;
+            color: #90ee90;
+            font-weight: bold;
+        }
+        
+        .quantity-input {
+            width: 70px !important;
+            padding: 6px !important;
+            margin-left: 10px;
+        }
+        
+        .bom-summary {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .bom-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .bom-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1e3c72;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4757, #ff6b7a);
+            color: #fff;
+        }
+        
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left: 4px solid #ffd700;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            background: rgba(144, 238, 144, 0.2);
+            border: 2px solid #90ee90;
+            color: #90ee90;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background: rgba(255, 71, 87, 0.2);
+            border: 2px solid #ff4757;
+            color: #ff4757;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            padding-left: 45px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .workflow-stages {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Hierarchical Assembly Builder</h1>
+            <p>Parts → Assemblies → Panels → Quotes Workflow System</p>
+        </div>
+        
+        <div class="workflow-stages">
+            <div class="workflow-stage active" id="partsStage">
+                <span class="stage-icon">🔧</span>
+                <div class="stage-title">Parts</div>
+                <div class="stage-description">Individual components from Master Catalog</div>
+            </div>
+            
+            <div class="workflow-stage" id="assembliesStage">
+                <span class="stage-icon">🏗️</span>
+                <div class="stage-title">Assemblies</div>
+                <div class="stage-description">Grouped components (current step)</div>
+            </div>
+            
+            <div class="workflow-stage" id="panelsStage">
+                <span class="stage-icon">⚡</span>
+                <div class="stage-title">Panels</div>
+                <div class="stage-description">Complete control systems</div>
+            </div>
+            
+            <div class="workflow-stage" id="quotesStage">
+                <span class="stage-icon">📋</span>
+                <div class="stage-title">Quotes</div>
+                <div class="stage-description">Final customer proposals</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="panel">
+                <h3>🔧 Available Parts</h3>
+                
+                <div class="search-box">
+                    <input type="text" id="partsSearch" placeholder="Search parts..." />
+                    <span class="search-icon">🔍</span>
+                </div>
+                
+                <div class="parts-list" id="partsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading parts from Master Catalog...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>🏗️ Create Assembly</h3>
+                
+                <div class="form-group">
+                    <label for="assemblyName">Assembly Name</label>
+                    <input type="text" id="assemblyName" placeholder="e.g., 1HP Motor Control Switch" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="assemblyCategory">Category</label>
+                    <select id="assemblyCategory">
+                        <option value="">Select Category</option>
+                        <option value="Motor Control">Motor Control</option>
+                        <option value="Safety Devices">Safety Devices</option>
+                        <option value="Automation">Automation</option>
+                        <option value="Enclosures">Enclosures</option>
+                        <option value="Process Control">Process Control</option>
+                        <option value="Sensors">Sensors</option>
+                        <option value="Valves">Valves</option>
+                        <option value="Power Distribution">Power Distribution</option>
+                        <option value="Services">Services</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="assemblyDescription">Description</label>
+                    <textarea id="assemblyDescription" placeholder="Detailed description of the assembly including key features and specifications..."></textarea>
+                </div>
+                
+                <div class="bom-summary">
+                    <h4 style="color: #ffd700; margin-bottom: 15px;">📋 Bill of Materials</h4>
+                    <div id="bomItems">
+                        <div style="text-align: center; opacity: 0.6; padding: 20px;">
+                            Select parts from the left panel to build your assembly
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn" onclick="saveAssembly()">💾 Save Assembly</button>
+            <button class="btn btn-secondary" onclick="previewAssembly()">👁️ Preview</button>
+            <button class="btn btn-secondary" onclick="loadExistingAssembly()">📂 Load Existing</button>
+            <button class="btn btn-danger" onclick="clearAssembly()">🗑️ Clear All</button>
+        </div>
+        
+        <div class="status-message" id="statusMessage"></div>
+        
+        <div class="loading" id="globalLoading">
+            <div class="spinner"></div>
+            Processing...
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let availableParts = [];
+        let selectedParts = new Map(); // partId -> {part, quantity}
+        let isLoading = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏗️ Hierarchical Assembly Builder initialized');
+            loadAvailableParts();
+            
+            // Set up search functionality
+            document.getElementById('partsSearch').addEventListener('input', filterParts);
+        });
+
+        /**
+         * Load available parts from HW_Parts sheet
+         */
+        async function loadAvailableParts() {
+            console.log('🔄 Loading available parts...');
+            setLoading(true);
+            
+            try {
+                const result = await callGoogleScript('getHierarchicalParts');
+                
+                if (result.success) {
+                    availableParts = result.parts;
+                    displayParts(availableParts);
+                    showStatus(`Loaded ${availableParts.length} parts successfully`, 'success');
+                } else {
+                    throw new Error(result.error || 'Failed to load parts');
+                }
+            } catch (error) {
+                console.error('❌ Error loading parts:', error);
+                showStatus(`Error loading parts: ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        /**
+         * Display parts in the parts list
+         */
+        function displayParts(parts) {
+            const partsList = document.getElementById('partsList');
+            
+            if (parts.length === 0) {
+                partsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; opacity: 0.6;">
+                        <p>No parts found. Initialize the hierarchical database first.</p>
+                        <button class="btn" onclick="initializeDatabase()" style="margin-top: 15px;">
+                            🏗️ Initialize Database
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            parts.forEach(part => {
+                const isSelected = selectedParts.has(part.partId);
+                const selectedData = selectedParts.get(part.partId);
+                const quantity = selectedData ? selectedData.quantity : 1;
+                
+                html += `
+                    <div class="part-item">
+                        <input type="checkbox" class="part-checkbox" 
+                               ${isSelected ? 'checked' : ''} 
+                               onchange="togglePart('${part.partId}')" />
+                        <div class="part-details">
+                            <div class="part-name">${part.partNumber || part.partId}</div>
+                            <div class="part-description">${part.description}</div>
+                            <div class="part-price">$${(part.unitCost || 0).toFixed(2)} ${part.unit || 'EA'}</div>
+                        </div>
+                        <input type="number" class="quantity-input" 
+                               value="${quantity}" min="1" 
+                               onchange="updateQuantity('${part.partId}', this.value)"
+                               ${!isSelected ? 'disabled' : ''} />
+                    </div>
+                `;
+            });
+            
+            partsList.innerHTML = html;
+        }
+
+        /**
+         * Filter parts based on search input
+         */
+        function filterParts() {
+            const searchTerm = document.getElementById('partsSearch').value.toLowerCase();
+            
+            if (!searchTerm) {
+                displayParts(availableParts);
+                return;
+            }
+            
+            const filteredParts = availableParts.filter(part => 
+                (part.partId || '').toLowerCase().includes(searchTerm) ||
+                (part.partNumber || '').toLowerCase().includes(searchTerm) ||
+                (part.description || '').toLowerCase().includes(searchTerm) ||
+                (part.category || '').toLowerCase().includes(searchTerm)
+            );
+            
+            displayParts(filteredParts);
+        }
+
+        /**
+         * Toggle part selection
+         */
+        function togglePart(partId) {
+            const part = availableParts.find(p => p.partId === partId);
+            if (!part) return;
+            
+            if (selectedParts.has(partId)) {
+                selectedParts.delete(partId);
+            } else {
+                selectedParts.set(partId, { part: part, quantity: 1 });
+            }
+            
+            updateBOMSummary();
+            displayParts(availableParts.filter(p => 
+                document.getElementById('partsSearch').value ? 
+                    p.partId.toLowerCase().includes(document.getElementById('partsSearch').value.toLowerCase()) ||
+                    p.description.toLowerCase().includes(document.getElementById('partsSearch').value.toLowerCase()) 
+                : true
+            ));
+        }
+
+        /**
+         * Update quantity for a part
+         */
+        function updateQuantity(partId, quantity) {
+            const qty = parseInt(quantity) || 1;
+            
+            if (selectedParts.has(partId)) {
+                const selectedData = selectedParts.get(partId);
+                selectedData.quantity = qty;
+                selectedParts.set(partId, selectedData);
+                updateBOMSummary();
+            }
+        }
+
+        /**
+         * Update BOM summary display
+         */
+        function updateBOMSummary() {
+            const bomItems = document.getElementById('bomItems');
+            
+            if (selectedParts.size === 0) {
+                bomItems.innerHTML = `
+                    <div style="text-align: center; opacity: 0.6; padding: 20px;">
+                        Select parts from the left panel to build your assembly
+                    </div>
+                `;
+                return;
+            }
+            
+            let totalCost = 0;
+            let html = '';
+            
+            selectedParts.forEach((selectedData, partId) => {
+                const part = selectedData.part;
+                const quantity = selectedData.quantity;
+                const unitCost = part.unitCost || 0;
+                const lineCost = unitCost * quantity;
+                totalCost += lineCost;
+                
+                html += `
+                    <div class="bom-item">
+                        <div style="flex: 1;">
+                            <strong>${part.partNumber || part.partId}</strong><br>
+                            <small>${part.description}</small>
+                        </div>
+                        <div style="text-align: right;">
+                            ${quantity} × $${unitCost.toFixed(2)} = <strong>$${lineCost.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="bom-item">
+                    <div style="flex: 1;"><strong>Total Assembly Cost:</strong></div>
+                    <div style="text-align: right;"><strong>$${totalCost.toFixed(2)}</strong></div>
+                </div>
+            `;
+            
+            bomItems.innerHTML = html;
+        }
+
+        /**
+         * Save the assembly
+         */
+        async function saveAssembly() {
+            const assemblyName = document.getElementById('assemblyName').value.trim();
+            const assemblyCategory = document.getElementById('assemblyCategory').value;
+            const assemblyDescription = document.getElementById('assemblyDescription').value.trim();
+            
+            // Validation
+            if (!assemblyName) {
+                showStatus('Please enter an assembly name', 'error');
+                return;
+            }
+            
+            if (!assemblyCategory) {
+                showStatus('Please select a category', 'error');
+                return;
+            }
+            
+            if (selectedParts.size === 0) {
+                showStatus('Please select at least one part for the assembly', 'error');
+                return;
+            }
+            
+            setLoading(true);
+            
+            try {
+                // Prepare assembly data
+                const bomComponents = Array.from(selectedParts.values()).map(selectedData => ({
+                    partId: selectedData.part.partId,
+                    partNumber: selectedData.part.partNumber,
+                    description: selectedData.part.description,
+                    quantity: selectedData.quantity,
+                    unitCost: selectedData.part.unitCost || 0,
+                    totalCost: (selectedData.part.unitCost || 0) * selectedData.quantity
+                }));
+                
+                const totalCost = bomComponents.reduce((sum, comp) => sum + comp.totalCost, 0);
+                
+                const assemblyData = {
+                    assemblyId: generateAssemblyId(assemblyName),
+                    assemblyName: assemblyName,
+                    description: assemblyDescription,
+                    category: assemblyCategory,
+                    totalCost: totalCost,
+                    componentCount: bomComponents.length,
+                    bomComponents: bomComponents
+                };
+                
+                console.log('💾 Saving assembly:', assemblyData);
+                
+                const result = await callGoogleScript('saveHierarchicalAssembly', assemblyData);
+                
+                if (result.success) {
+                    showStatus(`Assembly "${assemblyName}" saved successfully!`, 'success');
+                    clearAssembly();
+                } else {
+                    throw new Error(result.error || 'Failed to save assembly');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error saving assembly:', error);
+                showStatus(`Error saving assembly: ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        /**
+         * Generate assembly ID from name
+         */
+        function generateAssemblyId(name) {
+            return name.toUpperCase()
+                      .replace(/[^A-Z0-9\s]/g, '')
+                      .replace(/\s+/g, '_')
+                      .substring(0, 50);
+        }
+
+        /**
+         * Preview assembly (show details)
+         */
+        function previewAssembly() {
+            if (selectedParts.size === 0) {
+                showStatus('No parts selected to preview', 'error');
+                return;
+            }
+            
+            let preview = 'Assembly Preview:\n\n';
+            
+            selectedParts.forEach((selectedData, partId) => {
+                const part = selectedData.part;
+                const quantity = selectedData.quantity;
+                const unitCost = part.unitCost || 0;
+                const lineCost = unitCost * quantity;
+                
+                preview += `• ${part.partNumber || part.partId}\n`;
+                preview += `  ${part.description}\n`;
+                preview += `  Qty: ${quantity} × $${unitCost.toFixed(2)} = $${lineCost.toFixed(2)}\n\n`;
+            });
+            
+            const totalCost = Array.from(selectedParts.values())
+                .reduce((sum, data) => sum + ((data.part.unitCost || 0) * data.quantity), 0);
+            
+            preview += `Total Cost: $${totalCost.toFixed(2)}`;
+            
+            alert(preview);
+        }
+
+        /**
+         * Load existing assembly (placeholder)
+         */
+        function loadExistingAssembly() {
+            showStatus('Load existing assembly feature coming soon!', 'success');
+        }
+
+        /**
+         * Clear all selections
+         */
+        function clearAssembly() {
+            selectedParts.clear();
+            document.getElementById('assemblyName').value = '';
+            document.getElementById('assemblyCategory').value = '';
+            document.getElementById('assemblyDescription').value = '';
+            document.getElementById('partsSearch').value = '';
+            
+            updateBOMSummary();
+            displayParts(availableParts);
+            showStatus('Assembly cleared', 'success');
+        }
+
+        /**
+         * Initialize hierarchical database
+         */
+        async function initializeDatabase() {
+            setLoading(true);
+            
+            try {
+                const result = await callGoogleScript('initializeHierarchicalDatabase');
+                
+                if (result.success) {
+                    showStatus('Database initialized successfully!', 'success');
+                    // Reload parts
+                    setTimeout(() => loadAvailableParts(), 1000);
+                } else {
+                    throw new Error(result.error || 'Failed to initialize database');
+                }
+            } catch (error) {
+                console.error('❌ Error initializing database:', error);
+                showStatus(`Error initializing database: ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        /**
+         * Call Google Apps Script function
+         */
+        function callGoogleScript(functionName, ...args) {
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    [functionName](...args);
+            });
+        }
+
+        /**
+         * Set loading state
+         */
+        function setLoading(loading) {
+            isLoading = loading;
+            const globalLoading = document.getElementById('globalLoading');
+            const partsLoading = document.querySelector('.parts-list .loading');
+            
+            if (loading) {
+                globalLoading.style.display = 'block';
+                if (partsLoading) partsLoading.style.display = 'block';
+            } else {
+                globalLoading.style.display = 'none';
+                if (partsLoading) partsLoading.style.display = 'none';
+            }
+        }
+
+        /**
+         * Show status message
+         */
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type === 'error' ? 'error-message' : ''}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

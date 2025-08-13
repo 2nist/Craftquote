@@ -1,0 +1,129 @@
+## Quote Number Integration
+
+### Format: `CQ[YY][MM][DD][Category][Product][Company-Sequence]`
+- **CQ**: Craft Quote prefix
+- **YY**: Two-digit year (25 = 2025)
+- **MM**: Two-digit month (08 = August)  
+- **DD**: Two-digit day (07 = 7th)
+- **Category**: Equipment category (01-12)
+- **Product**: Product code (BHAC, MISC, etc.)
+- **Company-Sequence**: Company code with dash + sequence (MH-00)
+
+### Example Breakdown: `CQ25080701BHACMH-00`
+- CQ: Craft Quote
+- 25: Year 2025
+- 08: August  
+- 07: 7th day
+- 01: Brewhouse category
+- BHAC: Brewhouse Accessories
+- MH-00: Malt Handling company, quote #00
+quote number generator that USES; [CQO]-(CraftQuoteOEM)[26]-(YEAR)-[08]-(Month)-[07]-(Day)-[01]-(Category)-[BMAC]-(Product Code)-[00]-(QuoteNumber) Category	
+01	New Build
+02	Mod/Upgrade/Change Order
+03	Part Order/ Equipment
+04	Install / Commissioning
+05	Panel Build
+06	Warranty
+07	R&D
+08	Programming ONLY
+09	System Integration
+10	Engineering and Programming
+11	Evaluation
+12	Tech Support     Name
+Product code
+Brewhouse Manual Control
+BHMC
+Brewhouse Automated Control Panel
+BHAC
+Manual Still Control
+DTMC
+Brewhouse Gas Control Panel
+BHMC
+Brewhouse Gas/Electric Control Panel
+BHMC
+Heater Control Panel
+BHMC
+CIP Manual Control Panel
+CPMC
+CIP Automated Control Panel
+CPAC
+Keg Washer Control Panel
+KWCP
+Automated Still Control Panel
+DTAC
+Automated Cellar Control Panel
+CRAC
+Simple Single Tank Controller
+STCS
+Advanced Single Tank Controller
+STAC
+Grain Handling Automated Control Panel
+GHAC
+Grain Handling Manual Control Panel
+GHMC
+Start/Stop Non-Fused Motor Control Panel
+SSMS
+Start/Stop Fused Motor Control Panel
+SSFMS
+Start/Stop Non-Fused VFD Control Panel
+SSVS
+Start/Stop Fused VFD Control Panel
+SSFVS
+Start/Stop Pneumatic Control Panel
+SSPS
+Equipment/Part
+EQPT
+Warranty Part Order
+WARR
+Engineering/Programming
+ENPR
+Panel Modification
+PMOD
+System Integration
+SINT
+Onsite Commissioning
+CMSN
+Onsite Installation
+INST
+Tech Support
+TECH
+Dairy Automated Control Panel
+DYAC
+Freight Service
+FGHT
+Food/Beverage Automated Control
+FBAC
+Installation Materials
+INMT
+Data Management Integration
+DATA
+Data Specific Hard/Software
+DAHD
+Heater Control Panel
+HTMC
+Panel Build
+PNLB
+
+ Company Codes EXAMPLES
+| Code | Company |
+|------|---------|
+| BL | Blichmann |
+| MH | Malt Handling |
+| SB | Silverback |
+| SD | Still Dragon |
+| RM | RMS |
+| CF | Copperfiddle |
+| CM | Chapman |
+| SS | Stout Tanks |
+| AB | ABM Equipment |
+| TC | Tiantai |
+| SP | Spike |
+| WE | Williams Warn |
+| BR | Braulounge |
+| MP | Murphy & Son |
+| HG | Hangzhou Huihe |
+| NB | Northern Brewer |
+| PL | Premier Stainless |
+| GW | G&D Chillers |
+| AC | Alpha Brewing |
+| MI | MISC/Other |

@@ -1,0 +1,28 @@
+{
+  "projectName": "Iron City Distilling Grain Handling Control",
+  "panelType": "GHMC",
+  "oem": "Malt Handling",
+  "basedOn": "GHMC",
+  "variation": "Manual control of dosing screw and auger discharge, with one pneumatic knife gate and IP67-rated enclosure for outdoor install",
+  "quoteId": null,
+  "date": "2022-06-01",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "7.5HP VFD Assembly", "description": "VFD panel for dosing screw motor", "qty": 1, "section": "Motor Control" },
+    { "partNumber": "1.5HP Motor Control", "description": "Auger discharge knife gate motor", "qty": 1, "section": "Motor Control" },
+    { "partNumber": "Pneumatic Solenoid Assembly", "description": "Solenoid actuator for 16\" pneumatic knife gate", "qty": 1, "section": "Pneumatics" },
+    { "partNumber": "Phase Monitor", "description": "Phase/frequency/voltage fault protection", "qty": 1, "section": "Safety" },
+    { "partNumber": "Outdoor-Rated Enclosure", "description": "IP67 cabinet with keyed lockout", "qty": 1, "section": "Enclosure" }
+  ],
+  "notes": "Manual GHMC panel built for outdoor installation. Includes keyed access, 7.5HP VFD for dosing screw, and a 1.5HP auger discharge motor. Control is via selector switch and pilot LED indicators. No PLC or automation. BOM and PO detail all part numbers, control labels, and pricing. Delivered through Malt Handling PO #5596.",
+  "files": {
+    "bom": [
+      "CA22559601GHMH As Built BOM.xlsx"
+    ],
+    "quote": null,
+    "purchaseOrder": "PO_5596_from_MaltHandling.com_LLC_24372.pdf",
+    "config": "Iron City Distilling Config (PO 5596).pdf"
+  }
+}

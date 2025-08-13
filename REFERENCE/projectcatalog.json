@@ -1,0 +1,74 @@
+[
+  {
+    "code": "AGAC-Silverback-Pilot",
+    "panelType": "AGAC",
+    "oem": "Silverback",
+    "projectFile": "AGAC-Silverback-Pilot/project.json"
+  },
+  {
+    "code": "BHAC-Zipline-Standard",
+    "panelType": "BHAC",
+    "oem": "Zipline Brewing",
+    "projectFile": "BHAC-Zipline-Standard/project.json"
+  },
+  {
+    "code": "BHMC-Blichmann-Manual",
+    "panelType": "BHMC",
+    "oem": "Blichmann",
+    "projectFile": "BHMC-Blichmann-Manual/project.json"
+  },
+  {
+    "code": "CIP-BigGrove-DualLoop",
+    "panelType": "CIP",
+    "oem": "Big Grove",
+    "projectFile": "CIP-BigGrove-DualLoop/project.json"
+  },
+  {
+    "code": "CRAC-TurksHead-Expansion",
+    "panelType": "CRAC",
+    "oem": "Turks Head Brewing",
+    "projectFile": "CRAC-TurksHead-Expansion/project.json"
+  },
+  {
+    "code": "DTAC-Rosedale-Automated",
+    "panelType": "DTAC",
+    "oem": "Allied Beverage Tanks",
+    "projectFile": "DTAC-Rosedale-Automated/project.json"
+  },
+  {
+    "code": "DTMC-StillDragon-Manual",
+    "panelType": "DTMC",
+    "oem": "Still Dragon",
+    "projectFile": "DTMC-StillDragon-Manual/project.json"
+  },
+  {
+    "code": "GHAC-Rosedale-Automated",
+    "panelType": "GHAC",
+    "oem": "Malt Handling",
+    "projectFile": "GHAC-Rosedale-Automated/project.json"
+  },
+  {
+    "code": "GHMC-IronCity-Manual",
+    "panelType": "GHMC",
+    "oem": "Malt Handling",
+    "projectFile": "GHMC-IronCity-Manual/project.json"
+  },
+  {
+    "code": "GHMC-StJames-VFDEnclosure",
+    "panelType": "GHMC",
+    "oem": "RMS Roller-Grinder",
+    "projectFile": "GHMC-StJames-VFDEnclosure/project.json"
+  },
+  {
+    "code": "SSMS-PrisonCity-LoadCell",
+    "panelType": "SSMS",
+    "oem": "Malt Handling",
+    "projectFile": "SSMS-PrisonCity-LoadCell/project.json"
+  },
+  {
+    "code": "WT-BigGrove-ROPanel",
+    "panelType": "WT",
+    "oem": "First Key",
+    "projectFile": "WT-BigGrove-ROPanel/project.json"
+  }
+]

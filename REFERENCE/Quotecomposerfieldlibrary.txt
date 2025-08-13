@@ -1,0 +1,38 @@
+{
+  "partNumber": "FC6A-C16R",
+  "description": "Relay Expansion Card",
+  "category": "Automation",
+  "unitCost": 112.50,
+  "preferredPanelTypes": ["CRAC", "DTAC"]
+}
+["GHMC", "GHAC", "BHMC", "BHAC", "DTMC", "DTAC", "CIP", "CRAC", "SSMS", "AGAC", "WT"]
+[
+  { code: "01", label: "New Build" },
+  { code: "02", label: "Mod/Upgrade/Change Order" },
+  { code: "03", label: "Part Order/Equipment" },
+  { code: "04", label: "Install / Commissioning" },
+  { code: "05", label: "Panel Build" },
+  { code: "06", label: "Warranty" },
+  { code: "07", label: "R&D" },
+  { code: "08", label: "Programming ONLY" },
+  { code: "09", label: "System Integration" },
+  { code: "10", label: "Engineering and Programming" }
+]
+["Malt Handling", "Still Dragon", "First Key", "RMS Roller-Grinder", "Silverback", "Blichmann", "Zipline Brewing", "Turks Head Brewing", "Allied Beverage Tanks", "Big Grove", "Green Tree Ag", "Konig Brewing"]
+[
+  "50% ARO, 50% Prior to Delivery",
+  "Parts 100% Due on Receipt",
+  "Sales Tax Charged Unless Exempt Certificate Provided",
+  "Credit Card Payment: 3.5% Fee",
+  "ACH/Check: No Fee",
+  "Late Payment: 1.5% per 30 days",
+  "Storage: 2.0% per month post-ship date",
+  "Freight: Prepaid and Add to Invoice or Collect",
+  "FOB: Kalamazoo, Michigan"
+][
+  { label: "Standard", value: 1.25 },
+  { label: "Preferred Partner", value: 1.20 },
+  { label: "R&D/POC", value: 1.15 },
+  { label: "Commissioning Only", value: 1.10 }
+]
+

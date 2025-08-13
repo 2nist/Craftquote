@@ -30,11 +30,15 @@ function installCraftQuoteSystem() {
     setupAllSheets(spreadsheet);
     console.log('✅ All database sheets created.');
 
-    // Step 3: Populate the database with initial data
+    // Step 3: Create the branding sheet
+    setupBrandingSheet(spreadsheet);
+    console.log('✅ Branding sheet created.');
+
+    // Step 4: Populate the database with initial data
     populateInitialData(spreadsheet);
     console.log('✅ Initial data populated into Master Catalog and Product Templates.');
 
-    // Step 4: Install the all-important menu trigger
+    // Step 5: Install the all-important menu trigger
     installMenuTrigger(spreadsheet.getId());
     console.log('✅ onOpen trigger installed successfully.');
 
@@ -61,9 +65,10 @@ function addCraftQuoteMenu(e) {
   ui.createMenu('🔧 CraftQuote')
     .addItem('📝 Component Assembler', 'openHybridAssembler')
     .addSeparator()
-    .addItem('🎨 Branding Editor', 'showBrandingEditor') // New UI menu item
-    .addItem('📁 File Transfer Wizard', 'showFileWizard') // New UI menu item
+    .addItem('🎨 Branding Editor', 'showBrandingEditor')
+    .addItem('📁 File Transfer Wizard', 'showFileWizard')
     .addSeparator()
+    .addItem('📎 Upload Quote to Pipedrive', 'showPipedriveUploader')
     .addSubMenu(ui.createMenu('🏗️ System Builder')
       .addItem('🎛️ Open Assembly Editor', 'openAssemblyEditor')
       .addItem('📊 View All Assemblies', 'showAssemblyManager'))

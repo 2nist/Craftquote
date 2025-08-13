@@ -1,0 +1,34 @@
+{
+  "projectName": "Turks Head Brewing Cellar Expansion Panel",
+  "panelType": "CRAC",
+  "oem": "Turks Head Brewing",
+  "basedOn": "CRAC",
+  "variation": "Automated multi-zone fermentation control expansion with 32 relay-controlled glycol valves, VPN access, and full data logging",
+  "quoteId": "CQ24052201CRXPTH-01",
+  "date": "2024-06-14",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 1,
+  "parts": [
+    { "partNumber": "IDEC FC6A", "description": "PLC with 32 relay output channels", "qty": 1, "section": "Automation" },
+    { "partNumber": "Glycol Valves (CR301–CR332)", "description": "Solenoid or actuator controlled via 24VDC relays", "qty": 32, "section": "Cellar Valves" },
+    { "partNumber": "Relay Expansion Cards", "description": "Relay output TBs (FC6A-C16R)", "qty": 2, "section": "Control IO" },
+    { "partNumber": "24VDC Power Supply", "description": "Distributed across 4 relay banks", "qty": 4, "section": "Power Supply" },
+    { "partNumber": "VPN/VNC Access", "description": "Remote access and control via iPad or browser", "qty": 1, "section": "Connectivity" },
+    { "partNumber": "Data Logging Package", "description": "Continuous lifecycle tracking, email + SMS alerts", "qty": 1, "section": "Data & Alarms" }
+  ],
+  "notes": "This panel expands the main fermentation control system with a 32-zone relay-driven output array. Full schematic and PLC relay assignments are provided. CAD shows segmented relay banks and power distribution. Includes remote diagnostics, tank scheduling, and alarm notifications.",
+  "files": {
+    "bom": [
+      "CA24061401CRTH BOM.xlsx"
+    ],
+    "quote": "CQ24052201CRXPTH-01.pdf",
+    "cad": [
+      "CA24061401CRTH CAD As Designed.pdf",
+      "CA24061401CRTH CAD As Built.pdf"
+    ],
+    "reference": [
+      "6415-4-brochure-EA25-250-lowres.pdf"
+    ]
+  }
+}

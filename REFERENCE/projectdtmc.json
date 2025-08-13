@@ -1,0 +1,35 @@
+{
+  "projectName": "Still Dragon Manual Distillation Control (2x12kW)",
+  "panelType": "DTMC",
+  "oem": "Still Dragon",
+  "basedOn": "DTMC",
+  "variation": "Manual distilling panel with dual SSR heater zones, PXU PID interface, manual mixer control, and float switch input",
+  "quoteId": "CQ25020601DTMCSD-00",
+  "date": "2025-02-06",
+  "category": "01",
+  "salesID": "1",
+  "quoteSequence": 0,
+  "parts": [
+    { "partNumber": "Red Lion PXU-200", "description": "PID temperature controller", "qty": 1, "section": "Control Interface" },
+    { "partNumber": "12kW Heater Elements", "description": "2x 3-phase 480V resistive heaters", "qty": 2, "section": "Heating" },
+    { "partNumber": "SSR Phase Controllers", "description": "Solid State Relays (SSR) per heater zone", "qty": 2, "section": "Power Control" },
+    { "partNumber": "Agitator Control", "description": ".75 HP motor contactor, manual switch + LED", "qty": 1, "section": "Motor Control" },
+    { "partNumber": "Float Switch Input", "description": "Dry contact sensor input for safety interlock", "qty": 1, "section": "Safety" },
+    { "partNumber": "Enclosure Fan", "description": "24VDC, 0.35 FLC", "qty": 1, "section": "Cooling" }
+  ],
+  "notes": "No PLC or automation. Temperature is controlled via manual PID interface (Red Lion PXU), with operator toggle between auto/manual mode. Includes dual SSR heater zones, dry contact float switch input, and agitator control. Enclosure is rated Type 1, 5KA SCCR, built to UL508A.",
+  "files": {
+    "bom": [
+      "CA25234601DTMCSD BoM.xlsx"
+    ],
+    "quote": "CQ25020601DTMCSD-00 (2-12KW Assemblies .75 HP Mixer).pdf",
+    "cad": [
+      "CA25234601DTMCSD CAD As Built.pdf",
+      "CA25234601DTMCSD CAD SUBMITTAL (DESIGN).pdf"
+    ],
+    "checklists": [
+      "Production & Wiring Checklist.xlsx",
+      "Quality & Pre-Ship Check.xlsx"
+    ]
+  }
+}
