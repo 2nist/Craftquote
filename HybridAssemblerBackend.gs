@@ -64,26 +64,26 @@ function debugMasterCatalog() {
     };
   }
   
-  // Get headers
-  const headers = masterSheet.getRange(2, 1, 1, lastCol).getValues()[0];
+  // Get headers (row 1)
+  const headers = masterSheet.getRange(1, 1, 1, lastCol).getValues()[0];
   console.log('📋 Headers:', headers);
   
-  // Get sample data (first 6 rows)
-  const sampleRows = Math.min(7, lastRow); // Header + 5 data rows
-  const sampleData = masterSheet.getRange(2, 1, sampleRows, lastCol).getValues();
+  // Get sample data (first 5 data rows)
+  const sampleRowCount = Math.max(0, Math.min(5, lastRow - 1));
+  const sampleData = sampleRowCount > 0 ? masterSheet.getRange(2, 1, sampleRowCount, lastCol).getValues() : [];
   
   // Look for template components
   const templateComponents = ['A8067CHFL', 'CSD16126', 'CSD16166', 'CSD20208', 'A10106CHFL'];
   const foundComponents = [];
   
-  for (let i = 2; i < sampleData.length; i++) {
+  for (let i = 0; i < sampleData.length; i++) {
     const row = sampleData[i];
-    for (let j = 1; j < row.length; j++) {
+    for (let j = 0; j < row.length; j++) {
       if (templateComponents.includes(row[j])) {
         foundComponents.push({
           component: row[j],
           row: i + 2,
-          column: j + 2,
+          column: j + 1,
           data: row
         });
       }
@@ -98,7 +98,7 @@ function debugMasterCatalog() {
     headers: headers,
     sampleData: sampleData,
     foundTemplateComponents: foundComponents,
-    message: `Master Catalog ready: ${lastRow0} components available`
+  message: `Master Catalog ready: ${Math.max(0, lastRow - 1)} components available`
   };
 }
 
@@ -111,8 +111,8 @@ function debugMasterCatalog() {
 function loadComponentLibrary() {
   console.log('🎯 LOADING COMPONENT LIBRARY from Master Catalog...');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  let masterSheet = ss.getSheetByName('Master Catalog');
+
+  let masterSheet = ss.getSheetByName(SHEET_NAMES.MASTER_CATALOG || 'Master Catalog');
   if (!masterSheet) {
     console.log('❌ Master Catalog sheet not found');
     return {
@@ -124,7 +124,7 @@ function loadComponentLibrary() {
   
   try {
     const data = masterSheet.getDataRange().getValues();
-    if (data.length < 3) {
+  if (data.length < 2) {
       return {
         success: false,
         message: 'Master Catalog appears to be empty',
@@ -132,21 +132,14 @@ function loadComponentLibrary() {
       };
     }
     
-    // Use the same column mapping as our search function
-    const columnMap = {
-      yn: 0,           // Column A
-      part: 1,         // Column B - PART (category)
-      description: 2,   // Column C - DESCRIPTION  
-      partNum: 3,      // Column D - PART#
-      vendor: 4,       // Column E - VNDR
-      vendorNum: 5,    // Column F - VNDR#
-      cost: 6,         // Column G - COST
-    };
+  // Derive column mapping from headers (fallback to canonical)
+  const headers = data[0];
+  const columnMap = (typeof deriveColumnMapFromHeaders === 'function') ? deriveColumnMapFromHeaders(headers) : COLUMN_MAP;
     
     // Process all active components
     const componentsByCategory = {};
     
-    for (let i = 2; i < data.length; i++) { // Skip header rows
+  for (let i = 1; i < data.length; i++) { // Skip header row only
       const row = data[i];
       
       // Only include active components
@@ -258,27 +251,20 @@ function loadMoreComponents(categoryName, currentCount = 8) {
   console.log(`🎯 LOADING MORE COMPONENTS for ${categoryName}, starting from ${currentCount}...`);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  let masterSheet = ss.getSheetByName('Master Catalog');
+  let masterSheet = ss.getSheetByName(SHEET_NAMES.MASTER_CATALOG || 'Master Catalog');
   if (!masterSheet) {
     return { success: false, components: [] };
   }
   
   try {
-    const data = masterSheet.getDataRange().getValues();
-    const columnMap = {
-      yn: 0,           // Column A
-      part: 1,         // Column B - PART (category)
-      description: 2,   // Column C - DESCRIPTION  
-      partNum: 3,      // Column D - PART#
-      vendor: 4,       // Column E - VNDR
-      vendorNum: 5,    // Column F - VNDR#
-      cost: 6,         // Column G - COST
-    };
+  const data = masterSheet.getDataRange().getValues();
+  const headers = data[0];
+  const columnMap = (typeof deriveColumnMapFromHeaders === 'function') ? deriveColumnMapFromHeaders(headers) : COLUMN_MAP;
     
     // Find components for this category
     const categoryComponents = [];
     
-    for (let i = 2; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (row[columnMap.yn] !== 'Y') continue;
       
@@ -345,27 +331,20 @@ function searchComponents(searchTerm, maxResults = 20) {
   console.log(`🔍 SEARCHING COMPONENTS for: "${searchTerm}"`);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  let masterSheet = ss.getSheetByName('Master Catalog');
+  let masterSheet = ss.getSheetByName(SHEET_NAMES.MASTER_CATALOG || 'Master Catalog');
   if (!masterSheet) {
     return { success: false, components: [] };
   }
   
   try {
-    const data = masterSheet.getDataRange().getValues();
-    const columnMap = {
-      yn: 0,           // Column A
-      part: 1,         // Column B - PART (category)
-      description: 2,   // Column C - DESCRIPTION  
-      partNum: 3,      // Column D - PART#
-      vendor: 4,       // Column E - VNDR
-      vendorNum: 5,    // Column F - VNDR#
-      cost: 6,         // Column G - COST
-    };
+  const data = masterSheet.getDataRange().getValues();
+  const headers = data[0];
+  const columnMap = (typeof deriveColumnMapFromHeaders === 'function') ? deriveColumnMapFromHeaders(headers) : COLUMN_MAP;
     
     const searchResults = [];
     const searchUpper = searchTerm.toUpperCase();
     
-    for (let i = 2; i < data.length && searchResults.length < maxResults; i++) {
+  for (let i = 1; i < data.length && searchResults.length < maxResults; i++) {
       const row = data[i];
       if (row[columnMap.yn] !== 'Y') continue;
       
@@ -442,15 +421,15 @@ function loadProductTemplate(templateType) {
   console.log(`Active spreadsheet:`, SpreadsheetApp.getActiveSpreadsheet().getName());
   
   try {
-    // First, try to load from database (new architecture)
+    // Load from database (preferred). If not found, return a minimal shell.
     console.log('Loading template from database...');
-    let templateData = loadTemplateFromDatabase(templateType);
-    
-    // Fallback to knowledge-based creation if database fails
-    if (!templateData) {
-      console.log('Database template not found, creating from knowledge...');
-      templateData = createTemplateFromKnowledge(templateType);
-    }
+    let templateData = loadTemplateFromDatabase(templateType) || {
+      productType: templateType,
+      templateName: `${templateType} Template`,
+      components: [],
+      suggestions: [],
+      defaultConfig: {}
+    };
     
     // Ensure we always return a valid template object
     if (!templateData || !templateData.components) {
@@ -487,30 +466,29 @@ function loadProductTemplate(templateType) {
  */
 function getTemplateFromDatabase(templateType) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let templatesSheet = ss.getSheetByName('Product_Templates');
+  let templatesSheet = ss.getSheetByName(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates');
   
   if (!templatesSheet) {
     return null; // Templates don't exist yet, will create from knowledge
   }
   
   const data = templatesSheet.getDataRange().getValues();
-  const headers = data[1];
   
   // Find template row
   for (let i = 2; i < data.length; i++) {
     const row = data[i];
-    if (row[1] === templateType) { // TemplateID column
-      const componentIds = row[3] ? row[2].split(',') : []; // Components column
+    if (row[0] === templateType || row[1] === templateType) {
+      const componentIds = row[2] ? row[2].split(',') : [];
       
       // Get component details for each ID
       const components = componentIds.map(id => getComponentDetails(id.trim()));
       
       return {
         productType: templateType,
-        templateName: row[2], // TemplateName
+  templateName: row[1],
         components: components.filter(c => c), // Filter out nulls
         suggestions: getTemplateSuggestions(templateType),
-        defaultConfig: row[4] ? JSON.parse(row[3]) : {} // DefaultConfig
+  defaultConfig: row[3] ? JSON.parse(row[3]) : {}
       };
     }
   }
@@ -528,11 +506,11 @@ function getTemplateFromDatabase(templateType) {
  */
 function initializeProductTemplatesDatabase() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let templatesSheet = ss.getSheetByName('Product_Templates');
+  let templatesSheet = ss.getSheetByName(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates');
   
   // Create the Product_Templates sheet if it doesn't exist
   if (!templatesSheet) {
-    templatesSheet = ss.insertSheet('Product_Templates');
+    templatesSheet = ss.insertSheet(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates');
     
     // Set up headers
     const headers = ['TemplateID', 'TemplateName', 'ComponentList', 'DefaultConfig', 'CreatedDate', 'ModifiedDate', 'IsActive'];
@@ -553,7 +531,8 @@ function initializeProductTemplatesDatabase() {
         phase: '3',
         enclosureType: 'NEMA4',
         safetyLevel: 'standard',
-        suggestedOptions: ['Steam control module', 'Redundant temperature monitoring']
+        suggestedOptions: ['Steam control module', 'Redundant temperature monitoring'],
+        categoryCode: '05'
       })
     },
     {
@@ -565,7 +544,8 @@ function initializeProductTemplatesDatabase() {
         phase: '3',
         tempZones: '4',
         heaterControl: 'ssr',
-        suggestedOptions: ['Vapor recovery system', 'Ethanol vapor detection']
+        suggestedOptions: ['Vapor recovery system', 'Ethanol vapor detection'],
+        categoryCode: '05'
       })
     },
     {
@@ -577,7 +557,8 @@ function initializeProductTemplatesDatabase() {
         phase: '3',
         enclosureType: 'stainless',
         iolinkMasters: '4',
-        suggestedOptions: ['Wireless monitoring', 'Mobile app control']
+        suggestedOptions: ['Wireless monitoring', 'Mobile app control'],
+        categoryCode: '05'
       })
     },
     {
@@ -589,7 +570,8 @@ function initializeProductTemplatesDatabase() {
         phase: '3',
         motorAssemblies: '8',
         complexity: 'high',
-        suggestedOptions: ['Dust collection automation', 'Grain quality monitoring']
+        suggestedOptions: ['Dust collection automation', 'Grain quality monitoring'],
+        categoryCode: '05'
       })
     },
     {
@@ -601,7 +583,8 @@ function initializeProductTemplatesDatabase() {
         phase: '3',
         motorControl: 'vfd',
         protection: 'advanced',
-        suggestedOptions: ['Glycol leak detection', 'Backup pump system']
+        suggestedOptions: ['Glycol leak detection', 'Backup pump system'],
+        categoryCode: '05'
       })
     }
   ];
@@ -845,7 +828,7 @@ function getComponentDetails(componentId) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
   // FIRST: Try Master Catalog sheet in current spreadsheet
-  let masterCatalogSheet = ss.getSheetByName('Master Catalog');
+  let masterCatalogSheet = ss.getSheetByName(SHEET_NAMES.MASTER_CATALOG || 'Master Catalog');
   if (masterCatalogSheet) {
     console.log('📊 Master Catalog sheet found, searching...');
     try {
@@ -876,23 +859,24 @@ function getComponentDetails(componentId) {
   }
   
   // THIRD: Try Options table (backup)
-  let optionsSheet = ss.getSheetByName('Options');
+  let optionsSheet = ss.getSheetByName(SHEET_NAMES.OPTIONS || 'Options');
   if (optionsSheet) {
     console.log('📊 Searching Options sheet...');
     const data = optionsSheet.getDataRange().getValues();
-    for (let i = 2; i < data.length; i++) {
+    for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[1] === componentId) { // OptionID
+      // Schema: [OptionID, Name, Description, Category, Price, Applications, Configuration, CreatedDate]
+      if (row[0] === componentId) {
         console.log('✅ Found in Options sheet');
         return {
-          id: row[1],
-          name: row[2], // OptionName
-          description: row[3], // Description
-          price: row[4] || 0, // Price
+          id: row[0],
+          name: row[1],
+          description: row[2],
+          price: row[4] || 0,
           unitPrice: row[4] || 0,
-          quantity: 2,
-          category: row[5] || '',
-          partNumber: row[6] || '',
+          quantity: 1,
+          category: row[3] || '',
+          partNumber: row[0] || '',
           bomItems: getBOMForOption(componentId),
           source: 'Options',
           isPlaceholder: false
@@ -915,37 +899,18 @@ function getComponentDetails(componentId) {
 function searchMasterCatalogForComponent(sheet, componentId) {
   try {
     const data = sheet.getDataRange().getValues();
-    if (data.length < 3) return null; // No data
+    if (data.length < 2) return null; // No data
     
-    const headers = data[1];
+    const headers = data[0];
     console.log(`🔍 Searching for component: ${componentId}`);
     console.log('📋 Master Catalog headers:', headers);
     
-    // Your exact column structure based on debug output:
-    // yn	PART	DESCRIPTION	PART#	VNDR	VNDR#	COST	UNIT	VOLT	PHASE	AMPS	ASSEMBLY	TAGS	NOTES	LAST PRICE UPDATE	MANUAL Link
-    const columnMap = {
-      yn: 1,           // Column A
-      part: 2,         // Column B - PART
-      description: 3,   // Column C - DESCRIPTION  
-      partNum: 4,      // Column D - PART#
-      vendor: 5,       // Column E - VNDR
-      vendorNum: 6,    // Column F - VNDR#
-      cost: 7,         // Column G - COST
-      unit: 8,         // Column H - UNIT
-      volt: 9,         // Column I - VOLT
-      phase: 10,        // Column J - PHASE
-      amps: 11,        // Column K - AMPS
-      assembly: 12,    // Column L - ASSEMBLY
-      tags: 13,        // Column M - TAGS
-      notes: 14,       // Column N - NOTES
-      lastUpdate: 15,  // Column O - LAST PRICE UPDATE
-      manualLink: 16   // Column P - MANUAL Link
-    };
-    
-    console.log(`📍 Using fixed column mapping for your structure`);
+  // Derive mapping from headers if available; fallback to canonical
+  const columnMap = (typeof deriveColumnMapFromHeaders === 'function') ? deriveColumnMapFromHeaders(headers) : COLUMN_MAP;
+  console.log(`📍 Using column mapping`, columnMap);
     
     // Search through all rows - prioritize PART# column (D) first
-    for (let i = 2; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
       const row = data[i];
       
       // PRIMARY: Exact match on PART# column (most reliable)
@@ -956,7 +921,7 @@ function searchMasterCatalogForComponent(sheet, componentId) {
     }
     
     // SECONDARY: Try exact match on PART column (B)
-    for (let i = 2; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (row[columnMap.part] === componentId) {
         console.log(`✅ EXACT MATCH found in PART column, row ${i+2}`);
@@ -965,7 +930,7 @@ function searchMasterCatalogForComponent(sheet, componentId) {
     }
     
     // TERTIARY: Try partial matches in DESCRIPTION
-    for (let i = 2; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (row[columnMap.description] && 
           row[columnMap.description].toString().toUpperCase().includes(componentId.toUpperCase())) {
@@ -1003,7 +968,7 @@ function buildComponentFromMasterCatalogRow(row, columnMap, componentId) {
     unit: row[columnMap.unit] || 'EA',
     voltage: row[columnMap.volt] || '',
     phase: row[columnMap.phase] || '',
-    amps: parseFloat(row[columnMap.amps]) || 1,
+  amps: parseFloat(row[columnMap.amps]) || 0,
     assembly: row[columnMap.assembly] || '',
     tags: row[columnMap.tags] || '',
     notes: row[columnMap.notes] || '',
@@ -1102,10 +1067,10 @@ function createPlaceholderComponent(componentId) {
  */
 function saveTemplateToDatabase(templateType, template, components) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let templatesSheet = ss.getSheetByName('Product_Templates');
+  let templatesSheet = ss.getSheetByName(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates');
   
   if (!templatesSheet) {
-    templatesSheet = ss.insertSheet('Product_Templates');
+  templatesSheet = ss.insertSheet(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates');
     templatesSheet.getRange(2, 1, 1, 5).setValues([
       ['TemplateID', 'TemplateName', 'ComponentList', 'DefaultConfig', 'CreatedDate']
     ]);
@@ -1200,7 +1165,7 @@ function getSmartSuggestions(currentComponents) {
  */
 function getBOMForOption(optionId) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let bomMappingSheet = ss.getSheetByName('Option_BOM_Mapping');
+  let bomMappingSheet = ss.getSheetByName(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping');
   
   if (!bomMappingSheet) {
     return [];
@@ -1209,14 +1174,16 @@ function getBOMForOption(optionId) {
   const data = bomMappingSheet.getDataRange().getValues();
   const bomItems = [];
   
-  for (let i = 2; i < data.length; i++) {
+  for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    if (row[1] === optionId) { // OptionID
+    // Schema: [OptionID, ComponentID, ComponentDescription, Quantity, UnitPrice, TotalPrice]
+    if (row[0] === optionId) {
       bomItems.push({
-        partNumber: row[2], // PartNumber
-        quantity: row[3] || 1, // Quantity
-        assembly: row[4] || '', // Assembly
-        notes: row[5] || '' // Notes
+        partNumber: row[1],
+        description: row[2],
+        quantity: row[3] || 1,
+        unitPrice: row[4] || 0,
+        totalPrice: row[5] || (Number(row[3] || 0) * Number(row[4] || 0))
       });
     }
   }
@@ -1316,7 +1283,7 @@ function generateQuoteFromAssembly(quoteData) {
         `$${lineTotal.toFixed(3)}`
       ]);
       
-      itemLetter = String.fromCharCode(itemLetter.charCodeAt(1) + 1);
+      itemLetter = String.fromCharCode(itemLetter.charCodeAt(0) + 1);
     });
     
     quoteRows.push(['']);
@@ -1465,29 +1432,24 @@ function saveAsTemplate(templateName, quoteData) {
  */
 function generateQuoteNumber(productCode, companyCode) {
   const now = new Date();
-  const year = now.getFullYear().toString().slice(-1);
-  const month = (now.getMonth() + 2).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(3, '0');
-  const hour = now.getHours().toString().padStart(3, '0');
-  
-  return `CQ${year}${month}${day}${hour}${productCode}${companyCode}-01`;
+  const year = now.getFullYear().toString().slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const props = PropertiesService.getDocumentProperties();
+  const key = `SEQ_${year}${month}${day}`;
+  const seq = parseInt(props.getProperty(key) || '0', 10) + 1;
+  props.setProperty(key, String(seq));
+  return `CQ${year}${month}${day}${String(seq).padStart(2, '0')}${productCode}${companyCode}-00`;
 }
 
 // =================== MENU SYSTEM ===================
 
 /**
- * Create menu for hybrid assembler
+ * Legacy menu creator was renamed to avoid multiple onOpen handlers.
+ * The single source of truth for menus is CompleteMasterCatalogSystem_V2.onOpen.
  */
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Hybrid Quote System')
-    .addItem('Open Hybrid Assembler', 'openHybridAssembler')
-    .addSeparator()
-    .addItem('Import Production Manager CSV', 'convertProductionManagerCSV')
-    .addSeparator()
-    .addItem('Setup Database', 'initializeHybridDatabase')
-    .addItem('View Templates', 'showTemplateManager')
-    .addToUi();
+function onOpen_Backend_legacy() {
+  // Intentionally left inert. Call openHybridAssembler() from the V2 menu.
 }
 
 /**
@@ -1508,26 +1470,26 @@ function initializeHybridDatabase() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
   // Create Product_Templates sheet
-  if (!ss.getSheetByName('Product_Templates')) {
-    const templatesSheet = ss.insertSheet('Product_Templates');
-    templatesSheet.getRange(2, 1, 1, 5).setValues([
-      ['TemplateID', 'TemplateName', 'ComponentList', 'DefaultConfig', 'CreatedDate']
+  if (!ss.getSheetByName(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates')) {
+    const templatesSheet = ss.insertSheet(SHEET_NAMES.PRODUCT_TEMPLATES || 'Product_Templates');
+    templatesSheet.getRange(1, 1, 1, 7).setValues([
+      ['TemplateID', 'TemplateName', 'ComponentList', 'DefaultConfig', 'CreatedDate', 'ModifiedDate', 'IsActive']
     ]);
   }
   
   // Create Options sheet if doesn't exist
-  if (!ss.getSheetByName('Options')) {
-    const optionsSheet = ss.insertSheet('Options');
-    optionsSheet.getRange(2, 1, 1, 6).setValues([
-      ['OptionID', 'OptionName', 'Description', 'Price', 'Category', 'PartNumber']
+  if (!ss.getSheetByName(SHEET_NAMES.OPTIONS || 'Options')) {
+    const optionsSheet = ss.insertSheet(SHEET_NAMES.OPTIONS || 'Options');
+    optionsSheet.getRange(1, 1, 1, 8).setValues([
+      ['OptionID', 'Name', 'Description', 'Category', 'Price', 'Applications', 'Configuration', 'CreatedDate']
     ]);
   }
   
   // Create Option_BOM_Mapping sheet if doesn't exist
-  if (!ss.getSheetByName('Option_BOM_Mapping')) {
-    const bomMappingSheet = ss.insertSheet('Option_BOM_Mapping');
-    bomMappingSheet.getRange(2, 1, 1, 5).setValues([
-      ['OptionID', 'PartNumber', 'Quantity', 'Assembly', 'Notes']
+  if (!ss.getSheetByName(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping')) {
+    const bomMappingSheet = ss.insertSheet(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping');
+    bomMappingSheet.getRange(1, 1, 1, 6).setValues([
+      ['OptionID', 'ComponentID', 'ComponentDescription', 'Quantity', 'UnitPrice', 'TotalPrice']
     ]);
   }
   
@@ -1612,7 +1574,7 @@ function generateQuoteFromHybridData(hybridData) {
       ]);
       
       // Increment line item letter
-      lineItem = String.fromCharCode(lineItem.charCodeAt(1) + 1);
+      lineItem = String.fromCharCode(lineItem.charCodeAt(0) + 1);
     });
     
     // STEP 7: Add totals section
@@ -1693,47 +1655,26 @@ function generateProperQuoteNumber(hybridData) {
  * Get today's quote sequence number
  */
 function getTodaysQuoteSequence() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let quotesSheet = ss.getSheetByName('Quotes_Database');
-  
-  if (!quotesSheet) {
-    return 2; // First quote of the day
-  }
-  
-  const today = new Date().toDateString();
-  const data = quotesSheet.getDataRange().getValues();
-  let todaysQuotes = 1;
-  
-  for (let i = 2; i < data.length; i++) {
-    const quoteDate = new Date(data[i][2]); // Date column
-    if (quoteDate.toDateString() === today) {
-      todaysQuotes++;
-    }
-  }
-  
-  return todaysQuotes + 2;
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const props = PropertiesService.getDocumentProperties();
+  const key = `SEQ_${year}${month}${day}`;
+  const seq = parseInt(props.getProperty(key) || '0', 10) + 1;
+  props.setProperty(key, String(seq));
+  return seq;
 }
 
 /**
  * Generate company code from company name
  */
 function generateCompanyCode(companyName) {
-  // Extract first 3 letters of first two words
-  const words = companyName.toUpperCase().replace(/[^A-Z\s]/g, '').split(' ');
-  let code = '';
-  
-  for (let i = 1; i < Math.min(2, words.length); i++) {
-    if (words[i].length > 1) {
-      code += words[i].charAt(1);
-    }
-  }
-  
-  // Pad with 'X' if needed
-  while (code.length < 3) {
-    code += 'X';
-  }
-  
-  return code.slice(1, 2);
+  // First letters of the first two words, padded to 2
+  const words = (companyName || '').toUpperCase().replace(/[^A-Z\s]/g, '').trim().split(/\s+/);
+  const a = (words[0] || 'X').charAt(0) || 'X';
+  const b = (words[1] || 'X').charAt(0) || 'X';
+  return `${a}${b}`;
 }
 
 /**
@@ -1763,7 +1704,7 @@ function applyProfessionalQuoteFormatting(sheet, totalRows, componentCount) {
   const componentHeaderRow = 17;
   sheet.getRange(componentHeaderRow, 2, 1, 5)
     .setFontWeight('bold')
-    .setBackground('#e10ecef')
+    .setBackground('#E0ECEF')
     .setBorder(true, true, true, true, true, true);
   
   // Component lines formatting
@@ -1790,10 +1731,10 @@ function applyProfessionalQuoteFormatting(sheet, totalRows, componentCount) {
 function saveQuoteToPipedriveDatabase(quoteNumber, hybridData, subtotal) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let quotesSheet = ss.getSheetByName('Quotes_Database');
+    let quotesSheet = ss.getSheetByName(SHEET_NAMES.QUOTES_DB || 'Quotes_Database');
     
     if (!quotesSheet) {
-      quotesSheet = ss.insertSheet('Quotes_Database');
+      quotesSheet = ss.insertSheet(SHEET_NAMES.QUOTES_DB || 'Quotes_Database');
       quotesSheet.getRange(2, 1, 1, 12).setValues([
         ['QuoteNumber', 'Date', 'CustomerName', 'ContactPerson', 'Email', 'Phone', 
          'ProductType', 'ProjectName', 'ComponentCount', 'Subtotal', 'Total', 'Status']
@@ -1940,8 +1881,8 @@ function getCustomerInfoForm() {
       
       function onQuoteGenerated(result) {
         if (result.success) {
-          alert('Success!\\n\\n' + result.message + 
-                '\\n\\nCheck the "' + result.sheetName + '" tab for your professional quote.');
+          alert('Success!\n\n' + result.message + 
+                '\n\nCheck the "' + result.sheetName + '" tab for your professional quote.');
           google.script.host.close();
         } else {
           alert('Error generating quote: ' + result.error);
@@ -1953,7 +1894,9 @@ function getCustomerInfoForm() {
       }
     </script>
   `;
-  
+  return HtmlService.createHtmlOutput(html).setTitle('Customer Information');
+}
+
 /**
  * Save a new assembly to the database - CRITICAL SYSTEM GROWTH FUNCTION
  * This is the "Lego brick factory" that allows the system to learn and expand
@@ -1965,7 +1908,7 @@ function saveNewAssembly(assemblyData) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // Get or create the Options sheet for the new assembly
-    let optionsSheet = ss.getSheetByName('Options');
+  let optionsSheet = ss.getSheetByName(SHEET_NAMES.OPTIONS || 'Options');
     if (!optionsSheet) {
       optionsSheet = ss.insertSheet('Options');
       optionsSheet.getRange(1, 1, 1, 8).setValues([
@@ -1974,7 +1917,7 @@ function saveNewAssembly(assemblyData) {
     }
     
     // Get or create the Option_BOM_Mapping sheet for component relationships
-    let bomMappingSheet = ss.getSheetByName('Option_BOM_Mapping');
+  let bomMappingSheet = ss.getSheetByName(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping');
     if (!bomMappingSheet) {
       bomMappingSheet = ss.insertSheet('Option_BOM_Mapping');
       bomMappingSheet.getRange(1, 1, 1, 6).setValues([
@@ -2027,27 +1970,32 @@ function saveNewAssembly(assemblyData) {
     
     console.log(`✅ Added ${bomRowsAdded} BOM components to mapping sheet`);
     
-    // Also add to Master Catalog if it doesn't exist there
-    let masterCatalogSheet = ss.getSheetByName('Master Catalog');
+    // Also add to Master Catalog if it doesn't exist there (aligned with canonical schema)
+  let masterCatalogSheet = ss.getSheetByName(SHEET_NAMES.MASTER_CATALOG || 'Master Catalog');
     if (masterCatalogSheet) {
       const catalogData = masterCatalogSheet.getDataRange().getValues();
-      const existingCatalogIds = catalogData.slice(1).map(row => row[0]);
-      
-      if (!existingCatalogIds.includes(assemblyData.assemblyId)) {
-        // Add to Master Catalog for searchability
-        const catalogRow = [
-          assemblyData.assemblyId,                    // ID
-          assemblyData.assemblyName,                  // Name
-          assemblyData.description,                   // Description
-          assemblyData.category,                      // Category
-          assemblyData.totalPrice,                    // Price
-          assemblyData.bomComponents.length,          // Component Count
-          'Custom Assembly',                          // Type
-          new Date().toISOString().slice(0, 10)      // Date Added
+      // PART# is column D (index 3)
+      const existingPartNumbers = catalogData.slice(1).map(row => row[3]);
+      if (!existingPartNumbers.includes(assemblyData.assemblyId)) {
+        const row = [
+          'Y',                                         // yn
+          assemblyData.category || 'ASSEMBLY',         // PART (type)
+          assemblyData.assemblyName || assemblyData.description || 'Custom Assembly', // DESCRIPTION
+          assemblyData.assemblyId,                     // PART#
+          '',                                          // VNDR
+          '',                                          // VNDR#
+          assemblyData.totalPrice || 0,                // COST
+          'EA',                                        // UNIT
+          '', '', '',                                   // VOLT, PHASE, AMPS
+          'Custom',                                    // ASSEMBLY
+          'CUSTOM ASSEMBLY',                           // TAGS
+          '',                                          // NOTES
+          new Date().toLocaleDateString(),             // LAST PRICE UPDATE
+          ''                                           // MANUAL Link
+          // extras (if present) are left as defaults
         ];
-        
-        masterCatalogSheet.appendRow(catalogRow);
-        console.log('✅ Added assembly to Master Catalog for searchability');
+        masterCatalogSheet.appendRow(row);
+        console.log('✅ Added assembly to Master Catalog (canonical schema)');
       }
     }
     
@@ -2079,7 +2027,7 @@ function saveNewAssembly(assemblyData) {
 function getAllAssemblies() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const optionsSheet = ss.getSheetByName('Options');
+  const optionsSheet = ss.getSheetByName(SHEET_NAMES.OPTIONS || 'Options');
     
     if (!optionsSheet) {
       return { success: true, assemblies: [] };
@@ -2122,7 +2070,7 @@ function getAllAssemblies() {
 function getAssemblyBOM(assemblyId) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const bomSheet = ss.getSheetByName('Option_BOM_Mapping');
+  const bomSheet = ss.getSheetByName(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping');
     
     if (!bomSheet) {
       return { success: true, bom: [] };
@@ -2157,6 +2105,125 @@ function getAssemblyBOM(assemblyId) {
       error: error.toString(),
       bom: []
     };
+  }
+}
+
+/**
+ * Search assemblies for the quote builder UI
+ * Looks in the Options sheet (assembly definitions) and summarizes cost/component counts
+ */
+function searchAssembliesForQuoteBuilder(searchTerm) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const optionsSheet = ss.getSheetByName(SHEET_NAMES.OPTIONS || 'Options');
+  const bomSheet = ss.getSheetByName(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping');
+
+    if (!optionsSheet) {
+      return { success: true, results: [] };
+    }
+
+    const term = (searchTerm || '').toString().trim().toLowerCase();
+    const optData = optionsSheet.getDataRange().getValues();
+    const optRows = optData.slice(1); // skip header
+
+    // Build quick index of BOM totals by OptionID if BOM sheet exists
+    const bomTotals = {};
+    const bomCounts = {};
+    if (bomSheet) {
+      const bomData = bomSheet.getDataRange().getValues();
+      const bomRows = bomData.slice(1);
+      bomRows.forEach(row => {
+        const optionId = row[0];
+        const qty = Number(row[3] || 0);
+        const unit = Number(row[4] || 0);
+        const total = Number(row[5] || (qty * unit));
+        bomTotals[optionId] = (bomTotals[optionId] || 0) + (isNaN(total) ? 0 : total);
+        bomCounts[optionId] = (bomCounts[optionId] || 0) + 1;
+      });
+    }
+
+    const results = [];
+    optRows.forEach(row => {
+      const id = row[0];
+      const name = (row[1] || '').toString();
+      const description = (row[2] || '').toString();
+      const category = (row[3] || '').toString();
+      const listedPrice = Number(row[4] || 0);
+
+      // Simple relevance: match on name/category/description
+      const hay = `${name} ${category} ${description}`.toLowerCase();
+      if (!term || hay.includes(term)) {
+        const totalCost = bomTotals[id] || listedPrice || 0;
+        const componentCount = bomCounts[id] || 0;
+        results.push({
+          id,
+          name,
+          category,
+          description,
+          totalCost,
+          componentCount
+        });
+      }
+    });
+
+    return { success: true, results };
+  } catch (error) {
+    console.error('Error searching assemblies:', error);
+    return { success: false, error: error.toString(), results: [] };
+  }
+}
+
+/**
+ * Expand a specific assembly and return detailed component list for the UI
+ */
+function expandAssemblyForQuoteBuilder(assemblyId) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const optionsSheet = ss.getSheetByName(SHEET_NAMES.OPTIONS || 'Options');
+  const bomSheet = ss.getSheetByName(SHEET_NAMES.OPTION_BOM || 'Option_BOM_Mapping');
+
+    if (!optionsSheet) {
+      return { success: false, error: 'Options sheet not found' };
+    }
+
+    // Find the assembly row
+    const optData = optionsSheet.getDataRange().getValues();
+    const rows = optData.slice(1);
+    const found = rows.find(r => r[0] === assemblyId);
+    if (!found) {
+      return { success: false, error: `Assembly ${assemblyId} not found` };
+    }
+
+    const assembly = {
+      id: found[0],
+      name: found[1],
+      description: found[2],
+      category: found[3],
+      totalCost: Number(found[4] || 0),
+      componentCount: 0,
+      components: []
+    };
+
+    // Add BOM components if available
+    if (bomSheet) {
+      const bomData = bomSheet.getDataRange().getValues();
+      const bomRows = bomData.slice(1).filter(r => r[0] === assemblyId);
+      const components = bomRows.map(r => ({
+        id: r[1],
+        name: r[2],
+        partNumber: r[1],
+        cost: Number(r[5] || (Number(r[3] || 0) * Number(r[4] || 0)))
+      }));
+      assembly.components = components;
+      assembly.componentCount = components.length;
+      const bomTotal = components.reduce((s, c) => s + (Number(c.cost) || 0), 0);
+      if (bomTotal > 0) assembly.totalCost = bomTotal;
+    }
+
+    return { success: true, assembly };
+  } catch (error) {
+    console.error('Error expanding assembly:', error);
+    return { success: false, error: error.toString() };
   }
 }
 
@@ -2239,4 +2306,34 @@ function initializeHybridSystem() {
     };
   }
 }
+
+/**
+ * List available product templates for UI dropdowns
+ * Returns minimal data: id, name, isActive
+ */
+function listProductTemplates() {
+  try {
+    // Ensure the templates database exists and is initialized
+    const templatesSheet = initializeProductTemplatesDatabase();
+    const data = templatesSheet.getDataRange().getValues();
+    const rows = data.slice(1); // skip header
+
+    const templates = rows
+      .filter(r => (r[0] || '').toString().trim() !== '')
+      .map(r => ({
+        id: (r[0] || '').toString().trim(),
+        name: (r[1] || '').toString().trim(),
+        isActive: r[6] === '' || r[6] === true, // treat blank as active
+        categoryCode: (() => { try { const cfg = r[3] ? JSON.parse(r[3]) : {}; return cfg.categoryCode || ''; } catch(e){ return ''; } })()
+      }))
+      .filter(t => t.isActive);
+
+    // Sort by name for nicer UX
+    templates.sort((a, b) => a.name.localeCompare(b.name));
+
+    return { success: true, templates };
+  } catch (error) {
+    console.error('Error listing product templates:', error);
+    return { success: false, error: error.toString(), templates: [] };
+  }
 }

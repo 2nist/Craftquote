@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Set CSV File ID</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 16px; }
+      label { display:block; margin-bottom: 6px; color:#333; font-weight:600; }
+      input[type="text"], textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      .hint { color: #666; font-size: 12px; margin-top: 6px; }
+      .row { margin-bottom: 12px; }
+      .actions { display:flex; gap: 8px; justify-content:flex-end; margin-top: 14px; }
+      button { padding: 8px 14px; border-radius: 6px; border: 1px solid #999; cursor: pointer; }
+      .primary { background:#1a73e8; color:white; border-color:#1a73e8; }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <label for="csvId">Google Drive CSV File ID or URL</label>
+      <textarea id="csvId" rows="3" placeholder="Paste the File ID or the full Drive URL here (Ctrl+V)"></textarea>
+      <div class="hint">Examples:<br />
+        File ID: 1AbCDefGhIJklMNopQRsTuvWxYz123456<br />
+        URL: https://drive.google.com/file/d/1AbCDefGhIJklMNopQRsTuvWxYz123456/view?usp=sharing
+      </div>
+    </div>
+    <div class="row">
+      <small id="currentInfo" class="hint">Loading current setting…</small>
+    </div>
+    <div class="actions">
+      <button onclick="google.script.host.close()">Cancel</button>
+      <button class="primary" onclick="save()">Save</button>
+    </div>
+
+    <script>
+      function save() {
+        const raw = document.getElementById('csvId').value.trim();
+        if (!raw) { alert('Please paste a File ID or URL.'); return; }
+        google.script.run
+          .withSuccessHandler(res => {
+            if (res && res.success) {
+              alert('Saved! Linked to: ' + res.name);
+              google.script.host.close();
+            } else {
+              alert('Saved, but no response.');
+            }
+          })
+          .withFailureHandler(err => {
+            alert('Error: ' + (err && err.message ? err.message : err));
+          })
+          .setCsvFileIdFromValue(raw);
+      }
+
+      // Load current value (if any)
+      google.script.run
+        .withSuccessHandler(data => {
+          if (data && data.id) {
+            document.getElementById('currentInfo').textContent = 'Current File ID: ' + data.id;
+          } else {
+            document.getElementById('currentInfo').textContent = 'No CSV File ID is set yet.';
+          }
+        })
+        .getCurrentCsvFileId();
+    </script>
+  </body>
+</html>

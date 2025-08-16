@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    /* CSS Variables for Dynamic Branding */
+    :root {
+      --primary-color: #007bff;
+      --secondary-color: #6c757d;
+      --accent-color: #28a745;
+      --background-color: #f8f9fa;
+      --button-radius: 4px;
+      --button-padding: 10px 20px;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-color);
+      margin: 20px;
+      color: #333;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: var(--button-radius);
+    }
+
+    .app-title {
+      font-size: 2em;
+      margin: 0;
+    }
+
+    .app-tagline {
+      font-size: 1.1em;
+      margin: 5px 0 0 0;
+      opacity: 0.9;
+    }
+
+    .logo {
+      max-height: 50px;
+      margin-bottom: 10px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: var(--button-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn {
+      padding: var(--button-padding);
+      border: none;
+      border-radius: var(--button-radius);
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+
+    .btn-accent {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+      transform: translateY(-2px);
+    }
+
+    .icon {
+      font-size: 1.2em;
+      margin-right: 8px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .feature-card {
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: var(--button-radius);
+      text-align: center;
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+
+    .status-success {
+      background-color: var(--accent-color);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img id="appLogo" class="logo" style="display: none;" />
+    <h1 class="app-title">
+      <span id="appIcon">🔧</span>
+      <span id="appName">Hybrid Assembler</span>
+    </h1>
+    <p class="app-tagline" id="appTagline">Professional Automation Quote Builder</p>
+  </div>
+
+  <div class="section">
+    <h2>🎨 Dynamic Branding Demo</h2>
+    <p>This page demonstrates how the branding system works. All colors, icons, and text can be customized through the Branding Editor.</p>
+    
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span id="quoteIcon" class="icon">📋</span>
+        <h3>Quotes</h3>
+        <p>Generate professional quotes</p>
+      </div>
+      <div class="feature-card">
+        <span id="componentIcon" class="icon">⚙️</span>
+        <h3>Components</h3>
+        <p>Manage component catalog</p>
+      </div>
+      <div class="feature-card">
+        <span id="templateIcon" class="icon">📄</span>
+        <h3>Templates</h3>
+        <p>Use pre-built templates</p>
+      </div>
+      <div class="feature-card">
+        <span id="infoIcon" class="icon">💡</span>
+        <h3>Help</h3>
+        <p>Get system information</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Branded Buttons</h2>
+    <button class="btn btn-primary">
+      <span class="icon">🚀</span>Primary Action
+    </button>
+    <button class="btn btn-secondary">
+      <span class="icon">⚙️</span>Secondary Action
+    </button>
+    <button class="btn btn-accent">
+      <span class="icon">✨</span>Accent Action
+    </button>
+    
+    <div style="margin-top: 20px;">
+      <span class="status-indicator status-success">
+        <span class="icon">✅</span>System Ready
+      </span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>How to Apply Branding</h2>
+    <p>To use this branding system in your own HTML files:</p>
+    <ol>
+      <li><strong>Load branding on page load:</strong> Call <code>google.script.run.getBrandingConfig()</code></li>
+      <li><strong>Apply CSS variables:</strong> Update the <code>:root</code> CSS variables with your brand colors</li>
+      <li><strong>Update text and icons:</strong> Replace content with your branded values</li>
+      <li><strong>Show/hide logo:</strong> Display logo if URL is provided</li>
+    </ol>
+    
+    <button class="btn btn-primary" onclick="loadAndApplyBranding()">
+      <span class="icon">🎨</span>Apply Current Branding
+    </button>
+    <button class="btn btn-secondary" onclick="openBrandingEditor()">
+      <span class="icon">✏️</span>Edit Branding
+    </button>
+  </div>
+
+  <script>
+    // Load branding configuration on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAndApplyBranding();
+    });
+
+    function loadAndApplyBranding() {
+      google.script.run
+        .withSuccessHandler(applyBranding)
+        .withFailureHandler(function(error) {
+          console.error('Failed to load branding:', error);
+        })
+        .getBrandingConfig();
+    }
+
+    function applyBranding(config) {
+      console.log('Applying branding config:', config);
+      
+      // Update CSS variables for colors
+      const root = document.documentElement;
+      root.style.setProperty('--primary-color', config.colors.primary);
+      root.style.setProperty('--secondary-color', config.colors.secondary);
+      root.style.setProperty('--accent-color', config.colors.accent);
+      root.style.setProperty('--background-color', config.colors.background);
+      root.style.setProperty('--button-radius', config.buttons.borderRadius);
+      root.style.setProperty('--button-padding', config.buttons.padding);
+
+      // Update text content
+      document.getElementById('appName').textContent = config.app.name;
+      document.getElementById('appTagline').textContent = config.app.tagline;
+      
+      // Update icons
+      document.getElementById('appIcon').textContent = config.icons.app;
+      document.getElementById('quoteIcon').textContent = config.icons.quote;
+      document.getElementById('componentIcon').textContent = config.icons.component;
+      document.getElementById('templateIcon').textContent = config.icons.template;
+      document.getElementById('infoIcon').textContent = config.icons.info;
+
+      // Handle logo
+      const logo = document.getElementById('appLogo');
+      if (config.logo.url && config.logo.url.trim() !== '') {
+        logo.src = config.logo.url;
+        logo.style.height = config.logo.height;
+        logo.style.display = 'block';
+      } else {
+        logo.style.display = 'none';
+      }
+    }
+
+    function openBrandingEditor() {
+      google.script.run.openBrandingEditor();
+    }
+  </script>
+</body>
+</html>

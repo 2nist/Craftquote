@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <base target="_top">
     <title>Hybrid Component Assembler</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * {
             margin: 0;
@@ -175,6 +177,23 @@
         .assembly-controls {
             display: flex;
             gap: 8px;
+        }
+
+        /* Tiny remove checkbox */
+        .remove-checkbox {
+            width: 12px;
+            height: 12px;
+            transform: scale(0.9);
+            accent-color: #ef4444; /* match remove color */
+            cursor: pointer;
+        }
+        .remove-check {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 4px;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            background: #1f2937;
         }
 
         .control-btn {
@@ -556,6 +575,72 @@
         .component-item.adding {
             animation: slideInRight 0.3s ease;
         }
+
+        /* In-dialog Debug Console */
+        .debug-toggle {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: #e5e7eb;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+            z-index: 9999;
+        }
+        .debug-toggle:hover { background: #111827; border-color: #4b5563; }
+
+        .debug-console {
+            position: fixed;
+            right: 16px;
+            bottom: 56px;
+            width: 440px;
+            max-height: 50vh;
+            background: #0b1220;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9999;
+        }
+        .debug-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #111827;
+            color: #93c5fd;
+            font-weight: 600;
+            padding: 8px 10px;
+            border-bottom: 1px solid #334155;
+        }
+        .debug-actions { display: flex; gap: 6px; align-items: center; }
+        .debug-btn {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: #e5e7eb;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .debug-btn:hover { background: #0f172a; border-color: #475569; }
+        .debug-body {
+            padding: 8px;
+            overflow: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            color: #e5e7eb;
+            white-space: pre-wrap;
+        }
+        .debug-line { border-bottom: 1px dotted rgba(148,163,184,0.2); padding: 2px 0; }
+        .debug-line .ts { color: #93c5fd; }
+        .debug-line .lvl-info { color: #a7f3d0; }
+        .debug-line .lvl-warn { color: #fbbf24; }
+        .debug-line .lvl-error { color: #f87171; }
     </style>
 </head>
 <body>
@@ -582,10 +667,10 @@
                         <div class="info-item">Product: <span class="info-value" id="productType">Select Template or Build Custom</span></div>
                         <div class="info-item">Customer: <span class="info-value editable" id="customerName" onclick="editCustomerName()">TBD</span></div>
                         <div class="info-item">Company: 
-                            <input type="text" class="info-input" id="companyCode" placeholder="Enter 2-letter code (e.g., MH)" maxlength="2" style="text-transform: uppercase; width: 80px;">
+                            <input type="text" class="info-input" id="companyCode" placeholder="Enter 2-letter code (e.g., MH)" maxlength="2" style="text-transform: uppercase; width: 80px;" title="Two-letter company code">
                         </div>
                         <div class="info-item">Category: 
-                            <select class="info-select" id="categoryCode">
+                            <select class="info-select" id="categoryCode" title="Quote category">
                                 <option value="01">01 - New Build</option>
                                 <option value="02">02 - Mod/Upgrade/Change Order</option>
                                 <option value="03">03 - Part Order/Equipment</option>
@@ -601,43 +686,8 @@
                             </select>
                         </div>
                         <div class="info-item">Product Code: 
-                            <select class="info-select" id="productCode">
-                                <option value="BHMC">BHMC - Brewhouse Manual Control</option>
-                                <option value="BHAC">BHAC - Brewhouse Automated Control Panel</option>
-                                <option value="DTMC">DTMC - Manual Still Control</option>
-                                <option value="BHMC">BHMC - Brewhouse Gas Control Panel</option>
-                                <option value="BHMC">BHMC - Brewhouse Gas/Electric Control Panel</option>
-                                <option value="BHMC">BHMC - Heater Control Panel</option>
-                                <option value="CPMC">CPMC - CIP Manual Control Panel</option>
-                                <option value="CPAC">CPAC - CIP Automated Control Panel</option>
-                                <option value="KWCP">KWCP - Keg Washer Control Panel</option>
-                                <option value="DTAC">DTAC - Automated Still Control Panel</option>
-                                <option value="CRAC">CRAC - Automated Cellar Control Panel</option>
-                                <option value="STCS">STCS - Simple Single Tank Controller</option>
-                                <option value="STAC">STAC - Advanced Single Tank Controller</option>
-                                <option value="GHAC">GHAC - Grain Handling Automated Control Panel</option>
-                                <option value="GHMC">GHMC - Grain Handling Manual Control Panel</option>
-                                <option value="SSMS">SSMS - Start/Stop Non-Fused Motor Control Panel</option>
-                                <option value="SSFMS">SSFMS - Start/Stop Fused Motor Control Panel</option>
-                                <option value="SSVS">SSVS - Start/Stop Non-Fused VFD Control Panel</option>
-                                <option value="SSFVS">SSFVS - Start/Stop Fused VFD Control Panel</option>
-                                <option value="SSPS">SSPS - Start/Stop Pneumatic Control Panel</option>
-                                <option value="EQPT">EQPT - Equipment/Part</option>
-                                <option value="WARR">WARR - Warranty Part Order</option>
-                                <option value="ENPR">ENPR - Engineering/Programming</option>
-                                <option value="PMOD">PMOD - Panel Modification</option>
-                                <option value="SINT">SINT - System Integration</option>
-                                <option value="CMSN">CMSN - Onsite Commissioning</option>
-                                <option value="INST">INST - Onsite Installation</option>
-                                <option value="TECH">TECH - Tech Support</option>
-                                <option value="DYAC">DYAC - Dairy Automated Control Panel</option>
-                                <option value="FGHT">FGHT - Freight Service</option>
-                                <option value="FBAC">FBAC - Food/Beverage Automated Control</option>
-                                <option value="INMT">INMT - Installation Materials</option>
-                                <option value="DATA">DATA - Data Management Integration</option>
-                                <option value="DAHD">DAHD - Data Specific Hard/Software</option>
-                                <option value="HTMC">HTMC - Heater Control Panel</option>
-                                <option value="PNLB">PNLB - Panel Build</option>
+                            <select class="info-select" id="productCode" title="Product template">
+                                <!-- Will be populated dynamically on load; static fallback below if needed -->
                             </select>
                         </div>
                         <div class="info-item">Voltage: <span class="info-value" id="systemVoltage">480V</span></div>
@@ -725,6 +775,7 @@
                            id="componentSearch" onkeyup="debounceSearch()" 
                            style="flex: 1; padding: 8px 12px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px;">
                     <button onclick="clearSearch()" style="background: #374151; border: 1px solid #475569; color: #9ca3af; padding: 8px; border-radius: 4px; cursor: pointer;">Clear</button>
+                    <button onclick="openPriceList()" title="Open Component Price List sheet" style="background: #1f2937; border: 1px solid #475569; color: #cbd5e1; padding: 8px 10px; border-radius: 4px; cursor: pointer;">📑 Price List</button>
                 </div>
                 <div class="search-info" id="searchInfo" style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
                     Search assemblies (complete solutions) or individual components...
@@ -755,7 +806,7 @@
             <div class="library-content" id="libraryContent">
                 <!-- Search results will be displayed here -->
                 <div class="search-instructions" style="text-align: center; color: #64748b; padding: 40px 20px; font-style: italic;">
-                    <div style="font-size: 1.2em; margin-bottom: 15px;">� Assembly-First Quote Building</div>
+                    <div style="font-size: 1.2em; margin-bottom: 15px;">🔧 Assembly-First Quote Building</div>
                     <div style="margin-bottom: 10px;">Start with complete assemblies, then drill down to components</div>
                     <div style="margin-bottom: 15px;">Try: "Motor Control", "Safety Systems", "HMI Package", etc.</div>
                     <div style="font-size: 0.9em; color: #475569;">Click assembly filters above or search for specific solutions</div>
@@ -764,8 +815,23 @@
         </div>
     </div>
 
+    <!-- Debug Console UI -->
+    <button class="debug-toggle" id="debugToggle" onclick="toggleDebugConsole()" title="Show/Hide Debug Console">🐞 Debug</button>
+    <div class="debug-console" id="debugConsole">
+        <div class="debug-header">
+            <div>In-Dialog Debug Console</div>
+            <div class="debug-actions">
+                <input id="debugFilter" placeholder="filter (e.g. 🚀 or Search)" class="info-input" style="height: 26px; font-size: 12px; width: 180px;" oninput="applyDebugFilter()" />
+                <button class="debug-btn" onclick="copyDebugConsole()">Copy</button>
+                <button class="debug-btn" onclick="clearDebugConsole()">Clear</button>
+                <button class="debug-btn" onclick="toggleDebugConsole()">Close</button>
+            </div>
+        </div>
+        <div class="debug-body" id="debugBody"></div>
+    </div>
+
     <script>
-        // ============== IMMEDIATE STARTUP DETECTION ==============
+    // ============== IMMEDIATE STARTUP DETECTION ==============
         console.log('🎯 IMMEDIATE STARTUP - Script loading... Time:', new Date().toISOString());
         console.log('🎯 IMMEDIATE STARTUP - Document ready state:', document.readyState);
         console.log('🎯 IMMEDIATE STARTUP - Google object available:', typeof google !== 'undefined');
@@ -778,6 +844,12 @@
         console.log('🎯 ENVIRONMENT CHECK - google.script.run:', typeof google !== 'undefined' && google.script ? typeof google.script.run : 'google.script undefined');
         
         let currentMode = 'hybrid';
+        // UI behavior flags
+        const UI_SETTINGS = {
+            // If true, selecting a Product Code will auto-set the Category from the template's DefaultConfig.categoryCode
+            // Per feedback, default this to false so Category remains a deliberate/manual choice
+            autoSetCategoryFromTemplate: false
+        };
         let searchTimeout = null; // Add missing searchTimeout variable
         let quoteData = {
             components: [],
@@ -793,7 +865,38 @@
             
             // Fast startup - no heavy loading!
             console.log('🚀 FAST STARTUP - Using search-based interface');
+            // Enable in-dialog debug capture early
+            setupDebugConsole();
             initializeInterface();
+            // Populate product templates into the Product Code dropdown
+            populateProductCodes();
+        }
+
+        // Open Component Price List sheet (server-side generator)
+        function openPriceList() {
+            try {
+                const searchInfo = document.getElementById('searchInfo');
+                if (searchInfo) searchInfo.textContent = 'Building Component Price List...';
+                if (typeof google !== 'undefined' && google.script) {
+                    google.script.run
+                        .withSuccessHandler(function (res) {
+                            console.log('📑 Price List result:', res);
+                            if (searchInfo) searchInfo.textContent = res && res.success
+                                ? `Component Price List ready (${res.count || 0} items)`
+                                : 'Component Price List requested';
+                        })
+                        .withFailureHandler(function (err) {
+                            console.error('Price List error:', err);
+                            if (searchInfo) searchInfo.textContent = 'Failed to build Component Price List';
+                            alert('Failed to build Component Price List: ' + (err && err.message ? err.message : err));
+                        })
+                        .openComponentPriceList();
+                } else {
+                    alert('This button works in the Google Sheets dialog.');
+                }
+            } catch (e) {
+                console.error('openPriceList exception:', e);
+            }
         }
 
         // Initialize search-based interface (no heavy loading!)
@@ -803,6 +906,8 @@
             
             // No heavy component loading - just show search interface
             updateInterface();
+            // Ensure initial right-panel instructions are visible
+            clearSearch();
             console.log('✅ Interface ready for searching!');
         }
 
@@ -1779,6 +1884,35 @@
             updateSmartSuggestions();
         }
 
+        // Confirm and remove via tiny checkbox or button
+        function confirmRemove(index, el) {
+            try {
+                const comp = (quoteData && quoteData.components && quoteData.components[index]) || {};
+                const name = comp.name || 'this item';
+                const message = `Are you sure you want to remove "${name}"?`;
+
+                // If invoked from checkbox, only proceed when checked
+                if (el && el.type === 'checkbox') {
+                    if (el.checked) {
+                        if (confirm(message)) {
+                            removeComponent(index);
+                        } else {
+                            // revert checkbox if cancelled
+                            el.checked = false;
+                        }
+                    }
+                    return;
+                }
+
+                // Invoked from Remove button
+                if (confirm(message)) {
+                    removeComponent(index);
+                }
+            } catch (e) {
+                console.error('Error during confirmRemove:', e);
+            }
+        }
+
         function editComponent(index) {
             const component = quoteData.components[index];
             // Open component editor (to be implemented)
@@ -1805,8 +1939,11 @@
                         <div class="assembly-header">
                             <div class="assembly-name">${component.name}</div>
                             <div class="assembly-controls">
+                                <label class="remove-check" title="Check to remove">
+                                    <input type="checkbox" class="remove-checkbox" onchange="confirmRemove(${index}, this)" />
+                                </label>
                                 <button class="control-btn edit" onclick="editComponent(${index})">Edit</button>
-                                <button class="control-btn remove" onclick="removeComponent(${index})">Remove</button>
+                                <button class="control-btn remove" onclick="confirmRemove(${index})">Remove</button>
                             </div>
                         </div>
                         <div class="assembly-components">
@@ -2118,8 +2255,12 @@
             }
         }
 
-        // Initialize
-        initializeApplication();
+        // Initialize when DOM is ready (robust across environments)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApplication);
+        } else {
+            initializeApplication();
+        }
         
         // ============== FINAL STARTUP DETECTION ==============
         console.log('🎯 FINAL STARTUP - Script fully loaded, calling updateInterface()');
@@ -2172,7 +2313,180 @@
             // Initialize branding system
             initializeBranding();
         }, 100);
+
+        /**
+         * Populate Product Code dropdown from backend Product_Templates
+         */
+        function populateProductCodes() {
+            const select = document.getElementById('productCode');
+            if (!select) return;
+
+            // Keep a local map of id -> { name, categoryCode }
+            const templateMeta = {};
+
+            const applyOptions = (templates) => {
+                // Clear existing
+                select.innerHTML = '';
+                // Add a placeholder
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Select a product template';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                select.appendChild(placeholder);
+
+                templates.forEach(t => {
+                    templateMeta[t.id] = { name: t.name, categoryCode: t.categoryCode || '' };
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = `${t.id} - ${t.name}`;
+                    select.appendChild(opt);
+                });
+
+                // Bind change handler once
+                if (!select.dataset.bound) {
+                    select.addEventListener('change', (e) => {
+                        const code = e.target.value;
+                        if (code) {
+                            // Update visible product type label
+                            const chosen = Array.from(select.options).find(o => o.value === code);
+                            if (chosen) {
+                                document.getElementById('productType').textContent = chosen.textContent.split(' - ')[1] || code;
+                            }
+                            // Optionally set Category from template metadata if enabled
+                            if (UI_SETTINGS.autoSetCategoryFromTemplate) {
+                                const meta = templateMeta[code];
+                                if (meta && meta.categoryCode) {
+                                    const categorySelect = document.getElementById('categoryCode');
+                                    if (categorySelect) {
+                                        categorySelect.value = meta.categoryCode;
+                                        // If quote number exists, regenerate to reflect category change
+                                        if (document.getElementById('quoteNumber').textContent !== 'Click to Generate') {
+                                            generateNewQuoteNumber();
+                                        }
+                                    }
+                                }
+                            }
+                            // Load the template
+                            loadTemplate(code);
+                            // Ensure quote number reflects selected product code if already generated
+                            if (document.getElementById('quoteNumber').textContent !== 'Click to Generate') {
+                                generateNewQuoteNumber();
+                            }
+                        }
+                    });
+                    select.dataset.bound = '1';
+                }
+            };
+
+            // If in Apps Script, fetch live list
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(res => {
+                        if (res && res.success && Array.isArray(res.templates) && res.templates.length > 0) {
+                            applyOptions(res.templates);
+                        } else {
+                            console.warn('No templates from backend, using fallback');
+                            applyOptions(getFallbackTemplates());
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        console.warn('Failed to load templates, using fallback:', err);
+                        applyOptions(getFallbackTemplates());
+                    })
+                    .listProductTemplates();
+            } else {
+                // Fallback in browser
+                applyOptions(getFallbackTemplates());
+            }
+        }
+
+        function getFallbackTemplates() {
+            // Minimal fallback list aligning with curated templates
+            return [
+                { id: 'BHAC', name: 'Brewery Automated Control' },
+                { id: 'DTAC', name: 'Distillery Temperature Control' },
+                { id: 'CPAC', name: 'CIP Automated Control' },
+                { id: 'AGAC', name: 'Advanced Grain Automation Control' },
+                { id: 'GHAC', name: 'Glycol Heat Automation Control' }
+            ];
+        }
         
+        // ======== In-Dialog Debug Console (capture only this iframe) ========
+        let __debug = { enabled: false, buffer: [], max: 1000, filter: '' };
+        function setupDebugConsole() {
+            if (window.__debugPatched) return; // idempotent
+            window.__debugPatched = true;
+            const body = document.getElementById('debugBody');
+            const orig = {
+                log: console.log.bind(console),
+                warn: console.warn.bind(console),
+                error: console.error.bind(console)
+            };
+            function append(level, args) {
+                // Build text from args safely
+                const text = Array.from(args).map(a => {
+                    try {
+                        if (typeof a === 'string') return a;
+                        if (a instanceof Error) return a.stack || a.message;
+                        return JSON.stringify(a);
+                    } catch (e) { return String(a); }
+                }).join(' ');
+                const line = { t: new Date(), lvl: level, text };
+                __debug.buffer.push(line);
+                if (__debug.buffer.length > __debug.max) __debug.buffer.shift();
+                if (__debug.enabled) renderDebugConsole();
+            }
+            console.log = function() { append('info', arguments); orig.log.apply(null, arguments); };
+            console.warn = function() { append('warn', arguments); orig.warn.apply(null, arguments); };
+            console.error = function() { append('error', arguments); orig.error.apply(null, arguments); };
+            window.addEventListener('error', (e) => { append('error', [ 'Uncaught:', e.message, e.error || '' ]); });
+        }
+        function toggleDebugConsole() {
+            const el = document.getElementById('debugConsole');
+            __debug.enabled = !__debug.enabled;
+            el.style.display = __debug.enabled ? 'flex' : 'none';
+            if (__debug.enabled) renderDebugConsole();
+        }
+        function renderDebugConsole() {
+            const body = document.getElementById('debugBody');
+            const f = (__debug.filter || '').toLowerCase();
+            body.innerHTML = '';
+            __debug.buffer.forEach(line => {
+                if (f && !line.text.toLowerCase().includes(f)) return;
+                const div = document.createElement('div');
+                div.className = 'debug-line';
+                const ts = line.t.toLocaleTimeString();
+                const lvl = line.lvl === 'error' ? 'lvl-error' : (line.lvl === 'warn' ? 'lvl-warn' : 'lvl-info');
+                div.innerHTML = `<span class="ts">${ts}</span> <span class="${lvl}">[${line.lvl.toUpperCase()}]</span> ${escapeHtml(line.text)}`;
+                body.appendChild(div);
+            });
+            body.scrollTop = body.scrollHeight;
+        }
+        function clearDebugConsole() { __debug.buffer = []; renderDebugConsole(); }
+        function copyDebugConsole() {
+            const f = (__debug.filter || '').toLowerCase();
+            const lines = __debug.buffer
+                .filter(l => !f || l.text.toLowerCase().includes(f))
+                .map(l => `${l.t.toISOString()} [${l.lvl.toUpperCase()}] ${l.text}`)
+                .join('\n');
+            navigator.clipboard.writeText(lines).then(() => {
+                // small toast
+                console.log('📋 Debug console copied to clipboard');
+            });
+        }
+        function applyDebugFilter() {
+            const input = document.getElementById('debugFilter');
+            __debug.filter = input.value || '';
+            renderDebugConsole();
+        }
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         /**
          * Initialize dynamic branding system
          */

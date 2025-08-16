@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network File Explorer</title>
+  <base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      margin: 0;
+      background-color: #f8f9fa;
+    }
+    .header {
+      background-color: #1a73e8;
+      color: white;
+      padding: 10px;
+      margin: -10px -10px 15px -10px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .section {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    button:hover {
+      background-color: #1557b0;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .results {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .result-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .result-item:hover {
+      background-color: #f0f0f0;
+    }
+    .result-item:last-child {
+      border-bottom: none;
+    }
+    .job-name {
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .customer-name {
+      color: #666;
+      font-size: 0.9em;
+    }
+    .quote-number {
+      color: #888;
+      font-size: 0.8em;
+    }
+    .folder-path {
+      color: #999;
+      font-size: 0.7em;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    .no-results {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #b8daff;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    🔎 Network File Explorer
+  </div>
+
+  <div class="section">
+    <h3>Import NAS Index</h3>
+    <p>Import the latest job index from the NAS CSV files into the Jobs Database.</p>
+    <button onclick="importNasIndex()" id="importBtn">📥 Import Index</button>
+    <div id="importStatus"></div>
+  </div>
+
+  <div class="section">
+    <h3>Search Jobs</h3>
+    <input type="text" id="searchInput" placeholder="Search by job name, customer, or quote number..." 
+           onkeyup="handleSearch(event)">
+    <button onclick="searchJobs()" id="searchBtn">🔍 Search</button>
+    <button onclick="clearSearch()">🗑️ Clear</button>
+    
+    <div id="searchResults" class="results" style="display: none;"></div>
+    <div id="searchStatus"></div>
+  </div>
+
+  <div class="section">
+    <h3>Create Smart Directory</h3>
+    <input type="text" id="quoteInput" placeholder="Enter quote number for new directory...">
+    <button onclick="createDirectory()" id="createBtn">📁 Create Directory</button>
+    <div id="createStatus"></div>
+  </div>
+
+  <script>
+    let searchTimeout;
+
+    function showStatus(elementId, message, type = 'info') {
+      const element = document.getElementById(elementId);
+      element.innerHTML = `<div class="status ${type}">${message}</div>`;
+      if (type === 'success' || type === 'error') {
+        setTimeout(() => {
+          element.innerHTML = '';
+        }, 5000);
+      }
+    }
+
+    function importNasIndex() {
+      const btn = document.getElementById('importBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Importing...';
+      
+      showStatus('importStatus', '⏳ Importing NAS index files...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          showStatus('importStatus', '✅ Index imported successfully!', 'success');
+          btn.disabled = false;
+          btn.textContent = '📥 Import Index';
+        })
+        .withFailureHandler(function(error) {
+          showStatus('importStatus', `❌ Import failed: ${error.message}`, 'error');
+          btn.disabled = false;
+          btn.textContent = '📥 Import Index';
+        })
+        .importNasIndex();
+    }
+
+    function handleSearch(event) {
+      if (event.key === 'Enter') {
+        searchJobs();
+        return;
+      }
+      
+      // Debounce search
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const searchTerm = event.target.value.trim();
+        if (searchTerm.length >= 2) {
+          searchJobs();
+        } else if (searchTerm.length === 0) {
+          clearSearch();
+        }
+      }, 500);
+    }
+
+    function searchJobs() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+      if (!searchTerm || searchTerm.length < 2) {
+        showStatus('searchStatus', '⚠️ Please enter at least 2 characters to search', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('searchBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Searching...';
+      
+      showStatus('searchStatus', '🔍 Searching jobs...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function(results) {
+          displaySearchResults(results);
+          btn.disabled = false;
+          btn.textContent = '🔍 Search';
+          
+          if (results.length > 0) {
+            showStatus('searchStatus', `✅ Found ${results.length} result(s)`, 'success');
+          } else {
+            showStatus('searchStatus', '📭 No jobs found matching your search', 'info');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showStatus('searchStatus', `❌ Search failed: ${error.message}`, 'error');
+          btn.disabled = false;
+          btn.textContent = '🔍 Search';
+        })
+        .searchNasIndex(searchTerm);
+    }
+
+    function displaySearchResults(results) {
+      const resultsDiv = document.getElementById('searchResults');
+      
+      if (results.length === 0) {
+        resultsDiv.style.display = 'none';
+        return;
+      }
+
+      resultsDiv.style.display = 'block';
+      resultsDiv.innerHTML = results.map(job => `
+        <div class="result-item" onclick="selectJob('${job.QuoteNumber}', '${job.JobName}')">
+          <div class="job-name">${job.JobName}</div>
+          <div class="customer-name">Customer: ${job.CustomerName}</div>
+          <div class="quote-number">Quote: ${job.QuoteNumber}</div>
+          <div class="folder-path">${job.FolderPath}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectJob(quoteNumber, jobName) {
+      document.getElementById('quoteInput').value = quoteNumber;
+      showStatus('searchStatus', `📋 Selected: ${jobName} (${quoteNumber})`, 'info');
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').style.display = 'none';
+      document.getElementById('searchStatus').innerHTML = '';
+    }
+
+    function createDirectory() {
+      const quoteNumber = document.getElementById('quoteInput').value.trim();
+      if (!quoteNumber) {
+        showStatus('createStatus', '⚠️ Please enter a quote number', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('createBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Creating...';
+      
+      showStatus('createStatus', '📁 Creating directory...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function(message) {
+          showStatus('createStatus', message, 'success');
+          btn.disabled = false;
+          btn.textContent = '📁 Create Directory';
+          document.getElementById('quoteInput').value = '';
+        })
+        .withFailureHandler(function(error) {
+          showStatus('createStatus', `❌ Creation failed: ${error.message}`, 'error');
+          btn.disabled = false;
+          btn.textContent = '📁 Create Directory';
+        })
+        .createSmartDir(quoteNumber);
+    }
+
+    // Auto-focus search input when sidebar opens
+    window.onload = function() {
+      document.getElementById('searchInput').focus();
+    };
+  </script>
+</body>
+</html>

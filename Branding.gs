@@ -1,187 +1,299 @@
-/****************************************************************
- * CraftQuote System - Branding Configuration
- * Version: 1.0
- * Date: August 12, 2025
- *
- * This script manages all branding-related functionality,
- * including loading and saving settings from a dedicated
- * 'Branding' sheet and displaying the editor UI.
- ****************************************************************/
+/**
+ * Branding.gs
+ * Manages all branding and styling configurations for the Hybrid Assembler UI.
+ * Enhanced version with improved structure and functionality.
+ */
 
-// ===============================================================
-// 🎨 UI & MENU FUNCTIONS
-// ===============================================================
+const BRANDING_SHEET_NAME = "Branding";
+const DEFAULT_BRANDING = {
+  app: {
+    name: "Hybrid Assembler",
+    tagline: "Professional Automation Quote Builder",
+  },
+  colors: {
+    primary: "#007bff",
+    secondary: "#6c757d",
+    accent: "#28a745",
+    background: "#f8f9fa",
+  },
+  icons: {
+    app: "🔧",
+    quote: "📋",
+    component: "⚙️",
+    template: "📄",
+    info: "💡",
+  },
+  buttons: {
+    primaryBg: "#007bff",
+    primaryColor: "#ffffff",
+    secondaryBg: "#6c757d",
+    secondaryColor: "#ffffff",
+    borderRadius: "4px",
+    padding: "10px 20px",
+  },
+  logo: {
+    url: "", // URL of a hosted logo image
+    height: "50px",
+  },
+};
 
 /**
  * Displays the Branding Editor user interface.
- * This function is called from the custom menu in Setup.gs.
+ * This function is called from the custom menu.
  */
-function showBrandingEditor() {
-  const html = HtmlService.createTemplateFromFile('BrandingEditor')
-    .evaluate()
-    .setWidth(1200)
-    .setHeight(800)
-    .setTitle('🎨 CraftQuote Branding Editor');
-  SpreadsheetApp.getUi().showModalDialog(html, 'Branding Editor');
-}
-
-// ===============================================================
-// ⚙️ CONFIGURATION MANAGEMENT (SERVER-SIDE)
-// ===============================================================
-
-/**
- * Fetches the current branding configuration.
- * It reads from the 'Branding' sheet. If the sheet or data is
- * missing, it initializes it with default values.
- * This is called by the BrandingEditor.html frontend.
- *
- * @returns {object} A configuration object for the UI.
- */
-function getBrandingConfig() {
-  try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    let brandingSheet = spreadsheet.getSheetByName('Branding');
-
-    if (!brandingSheet || brandingSheet.getLastRow() < 2) {
-      console.log("Branding sheet not found or empty, initializing...");
-      brandingSheet = setupBrandingSheet(spreadsheet);
-    }
-
-    const data = brandingSheet.getRange(2, 1, brandingSheet.getLastRow() - 1, 2).getValues();
-    const config = {};
-    data.forEach(row => {
-      if (row[0]) { // Key is in column A
-        config[row[0]] = row[1]; // Value is in column B
-      }
-    });
-    console.log("Successfully loaded branding config.");
-    return { success: true, config: config };
-  } catch (e) {
-    console.error(`Error in getBrandingConfig: ${e.toString()}`, e.stack);
-    return { success: false, error: e.message };
-  }
+function openBrandingEditor() {
+  const html = HtmlService.createHtmlOutputFromFile('BrandingEditor')
+    .setWidth(400)
+    .setHeight(600)
+    .setTitle('Branding Editor');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Edit Branding');
 }
 
 /**
- * Saves the updated branding configuration to the 'Branding' sheet.
- * This is called by the BrandingEditor.html frontend.
- *
- * @param {object} config The configuration object received from the UI.
- * @returns {object} A result object with success status.
+ * Initializes the Branding sheet with default values if it doesn't exist.
+ * This is called once during initial system setup.
  */
-function saveBrandingConfig(config) {
-  try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const brandingSheet = spreadsheet.getSheetByName('Branding');
-    if (!brandingSheet) {
-      throw new Error("'Branding' sheet not found. Please run the main installer again.");
-    }
+function initializeBrandingSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(BRANDING_SHEET_NAME);
 
-    const range = brandingSheet.getRange(2, 1, brandingSheet.getLastRow() - 1, 2);
-    const values = range.getValues();
-    const user = Session.getActiveUser().getEmail();
-    const timestamp = new Date();
+  if (!sheet) {
+    sheet = ss.insertSheet(BRANDING_SHEET_NAME);
+    const headers = ["Setting", "Value", "Notes"];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+    sheet.getRange(1, 1, 1, headers.length).setBackground("#1a73e8").setFontColor("white");
+    sheet.setFrozenRows(1);
 
-    // Create a map of keys for efficient updating
-    const keyMap = {};
-    values.forEach((row, index) => {
-      keyMap[row[0]] = index;
-    });
-
-    // Update values in the 2D array
-    for (const key in config) {
-      if (keyMap.hasOwnProperty(key)) {
-        const rowIndex = keyMap[key];
-        values[rowIndex][1] = config[key]; // Update value
-        brandingSheet.getRange(rowIndex + 2, 3).setValue(timestamp); // Update timestamp
-        brandingSheet.getRange(rowIndex + 2, 4).setValue(user); // Update user
-      }
-    }
-
-    // Write the updated values back to the sheet
-    range.setValues(values);
-    SpreadsheetApp.flush(); // Ensure changes are saved immediately
-
-    console.log("Successfully saved branding config.");
-    return { success: true, message: 'Branding settings saved successfully!' };
-  } catch (e) {
-    console.error(`Error in saveBrandingConfig: ${e.toString()}`, e.stack);
-    return { success: false, message: 'Error saving settings: ' + e.message };
+    // Populate with default settings
+    const defaultData = [
+      ["appName", DEFAULT_BRANDING.app.name, "Name of the application"],
+      ["appTagline", DEFAULT_BRANDING.app.tagline, "Short tagline for the app"],
+      ["primaryColor", DEFAULT_BRANDING.colors.primary, "Main color for buttons, titles"],
+      ["secondaryColor", DEFAULT_BRANDING.colors.secondary, "Color for secondary elements"],
+      ["accentColor", DEFAULT_BRANDING.colors.accent, "Accent color for highlights"],
+      ["backgroundColor", DEFAULT_BRANDING.colors.background, "Background color"],
+      ["logoUrl", DEFAULT_BRANDING.logo.url, "URL of the company logo"],
+      ["logoHeight", DEFAULT_BRANDING.logo.height, "Height of the logo"],
+      ["buttonRadius", DEFAULT_BRANDING.buttons.borderRadius, "Rounding for all buttons"],
+      ["buttonPadding", DEFAULT_BRANDING.buttons.padding, "Button padding"],
+      ["appIcon", DEFAULT_BRANDING.icons.app, "Main app icon emoji or character"],
+      ["quoteIcon", DEFAULT_BRANDING.icons.quote, "Quote icon"],
+      ["componentIcon", DEFAULT_BRANDING.icons.component, "Component icon"],
+      ["templateIcon", DEFAULT_BRANDING.icons.template, "Template icon"],
+      ["infoIcon", DEFAULT_BRANDING.icons.info, "Info icon"],
+    ];
+    sheet.getRange(2, 1, defaultData.length, headers.length).setValues(defaultData);
+    sheet.autoResizeColumns(1, headers.length);
+    
+    console.log('✅ Branding sheet initialized with default settings');
   }
-}
-
-
-// ===============================================================
-// 🔩 INITIALIZATION & HELPER FUNCTIONS
-// ===============================================================
-
-/**
- * Creates and initializes the 'Branding' sheet with default values.
- * This function is called by the main setup script.
- * @param {Spreadsheet} ss The spreadsheet object.
- * @returns {Sheet} The initialized branding sheet.
- */
-function setupBrandingSheet(ss) {
-  let sheet = ss.getSheetByName('Branding');
-  if (sheet) {
-    console.log("'Branding' sheet already exists. Clearing and re-populating.");
-    sheet.clear();
-  } else {
-    sheet = ss.insertSheet('Branding');
-    console.log("'Branding' sheet created.");
-  }
-  
-  // Set up headers
-  const headers = ['Key', 'Value', 'Last Modified', 'Modified By'];
-  const headerRange = sheet.getRange(1, 1, 1, headers.length);
-  headerRange.setValues([headers]);
-  headerRange.setFontWeight('bold').setBackground('#4a90e2').setFontColor('white');
-  sheet.setFrozenRows(1);
-
-  // Get default data and populate the sheet
-  const defaultConfig = getDefaultBrandingData();
-  const dataRows = Object.keys(defaultConfig).map(key => [key, defaultConfig[key], new Date(), Session.getActiveUser().getEmail()]);
-  
-  sheet.getRange(2, 1, dataRows.length, dataRows[0].length).setValues(dataRows);
-
-  // Auto-resize columns for readability
-  for (let i = 1; i <= headers.length; i++) {
-    sheet.autoResizeColumn(i);
-  }
-  
   return sheet;
 }
 
+/**
+ * Retrieves all branding settings from the Branding sheet.
+ * @returns {object} A configuration object with branding settings.
+ */
+function getBrandingConfig() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(BRANDING_SHEET_NAME);
+
+  if (!sheet) {
+    // If the sheet doesn't exist, initialize it and return defaults
+    initializeBrandingSheet();
+    return DEFAULT_BRANDING;
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const config = { ...DEFAULT_BRANDING }; // Start with defaults
+  
+  if (data.length > 1) {
+    data.slice(1).forEach((row) => {
+      const [setting, value] = row;
+      if (setting && value !== null && value !== undefined) {
+        // Map settings from the sheet to the config object
+        switch (setting) {
+          case "appName":
+            config.app.name = value;
+            break;
+          case "appTagline":
+            config.app.tagline = value;
+            break;
+          case "primaryColor":
+            config.colors.primary = value;
+            break;
+          case "secondaryColor":
+            config.colors.secondary = value;
+            break;
+          case "accentColor":
+            config.colors.accent = value;
+            break;
+          case "backgroundColor":
+            config.colors.background = value;
+            break;
+          case "logoUrl":
+            config.logo.url = value;
+            break;
+          case "logoHeight":
+            config.logo.height = value;
+            break;
+          case "buttonRadius":
+            config.buttons.borderRadius = value;
+            break;
+          case "buttonPadding":
+            config.buttons.padding = value;
+            break;
+          case "appIcon":
+            config.icons.app = value;
+            break;
+          case "quoteIcon":
+            config.icons.quote = value;
+            break;
+          case "componentIcon":
+            config.icons.component = value;
+            break;
+          case "templateIcon":
+            config.icons.template = value;
+            break;
+          case "infoIcon":
+            config.icons.info = value;
+            break;
+        }
+      }
+    });
+  }
+
+  return config;
+}
+
+/**
+ * Saves branding settings from the UI to the Branding sheet.
+ * @param {object} newSettings The new branding settings from the UI.
+ */
+function saveBrandingConfig(newSettings) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(BRANDING_SHEET_NAME);
+  
+  if (!sheet) {
+    sheet = initializeBrandingSheet();
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const settingsMap = new Map(data.slice(1).map((row) => [row[0], row]));
+  
+  Object.entries(newSettings).forEach(([key, value]) => {
+    if (settingsMap.has(key)) {
+      settingsMap.get(key)[1] = value;
+    } else {
+      // Add new settings if they don't exist
+      settingsMap.set(key, [key, value, 'User-defined setting']);
+    }
+  });
+
+  const newData = [headers, ...Array.from(settingsMap.values())];
+  sheet.clear();
+  sheet.getRange(1, 1, newData.length, headers.length).setValues(newData);
+  
+  // Reapply formatting
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+  sheet.getRange(1, 1, 1, headers.length).setBackground("#1a73e8").setFontColor("white");
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  console.log('✅ Branding settings saved successfully');
+  return "Branding settings saved successfully!";
+}
+
+/**
+ * Resets branding to default values.
+ */
+function resetBrandingToDefaults() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(BRANDING_SHEET_NAME);
+  
+  if (sheet) {
+    ss.deleteSheet(sheet);
+  }
+  
+  initializeBrandingSheet();
+  return "Branding reset to default values!";
+}
+
+/**
+ * Gets a preview of how the branding will look (for testing).
+ */
+function previewBranding() {
+  const config = getBrandingConfig();
+  let preview = `🎨 BRANDING PREVIEW\n\n`;
+  preview += `App: ${config.icons.app} ${config.app.name}\n`;
+  preview += `Tagline: ${config.app.tagline}\n`;
+  preview += `Primary Color: ${config.colors.primary}\n`;
+  preview += `Secondary Color: ${config.colors.secondary}\n`;
+  preview += `Accent Color: ${config.colors.accent}\n`;
+  preview += `Logo URL: ${config.logo.url || 'None set'}\n`;
+  preview += `Button Style: ${config.buttons.borderRadius} corners, ${config.buttons.padding} padding\n`;
+  
+  SpreadsheetApp.getUi().alert('Branding Preview', preview, SpreadsheetApp.getUi().ButtonSet.OK);
+  return config;
+}
+
+/**
+ * Legacy compatibility function - maps to new getBrandingConfig
+ */
+function showBrandingEditor() {
+  openBrandingEditor();
+}
+
+/**
+ * Creates and initializes the 'Branding' sheet with default values.
+ * Legacy compatibility function for existing system.
+ */
+function setupBrandingSheet(ss) {
+  return initializeBrandingSheet();
+}
 
 /**
  * Provides the default branding configuration.
- * @returns {object} The default branding key-value pairs.
+ * Legacy compatibility function for existing system.
  */
 function getDefaultBrandingData() {
-    return {
-        // Application Identity
-        appName: "CraftQuote",
-        appTagline: "Professional Automation Quote Builder",
-        appIcon: "🔧",
-        companyName: "Craft Automation Systems",
-        // Color Scheme
-        primaryColor: "#4a90e2",
-        secondaryColor: "#60a5fa",
-        accentColor: "#10b981",
-        successColor: "#22c55e",
-        warningColor: "#f59e0b",
-        dangerColor: "#ef4444",
-        // Product Category Icons
-        bhacIcon: "🍺",
-        dtacIcon: "🥃",
-        cpacIcon: "🧽",
-        ghacIcon: "🌾",
-        agacIcon: "⚙️",
-        // Action Icons
-        addIcon: "➕",
-        removeIcon: "❌",
-        editIcon: "✏️",
-        saveIcon: "💾",
-        generateIcon: "✨"
-    };
+  return {
+    // Application Identity
+    appName: DEFAULT_BRANDING.app.name,
+    appTagline: DEFAULT_BRANDING.app.tagline,
+    appIcon: DEFAULT_BRANDING.icons.app,
+    companyName: "Craft Automation Systems",
+    // Color Scheme
+    primaryColor: DEFAULT_BRANDING.colors.primary,
+    secondaryColor: DEFAULT_BRANDING.colors.secondary,
+    accentColor: DEFAULT_BRANDING.colors.accent,
+    successColor: "#22c55e",
+    warningColor: "#f59e0b",
+    dangerColor: "#ef4444",
+    backgroundColor: DEFAULT_BRANDING.colors.background,
+    // Product Category Icons
+    bhacIcon: "🍺",
+    dtacIcon: "🥃",
+    cpacIcon: "🧽",
+    ghacIcon: "🌾",
+    agacIcon: "⚙️",
+    // Action Icons
+    addIcon: "➕",
+    removeIcon: "❌",
+    editIcon: "✏️",
+    saveIcon: "💾",
+    generateIcon: "✨",
+    quoteIcon: DEFAULT_BRANDING.icons.quote,
+    componentIcon: DEFAULT_BRANDING.icons.component,
+    templateIcon: DEFAULT_BRANDING.icons.template,
+    infoIcon: DEFAULT_BRANDING.icons.info,
+    // Logo settings
+    logoUrl: DEFAULT_BRANDING.logo.url,
+    logoHeight: DEFAULT_BRANDING.logo.height,
+    // Button settings
+    buttonRadius: DEFAULT_BRANDING.buttons.borderRadius,
+    buttonPadding: DEFAULT_BRANDING.buttons.padding
+  };
 }

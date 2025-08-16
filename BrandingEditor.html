@@ -2,374 +2,179 @@
 <html>
 <head>
   <base target="_top">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f8f9fa;
-      color: #202124;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    h1 {
-      color: #4a90e2;
-      text-align: center;
-      margin-bottom: 20px;
-      font-weight: 500;
-    }
-    .editor-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 30px;
-      align-items: start;
-    }
-    .form-section, .preview-section {
-      background-color: #fff;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    }
-    .form-section {
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    h2 {
-        font-weight: 500;
-        color: #3c4043;
-        margin-top: 0;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #e0e0e0;
-        padding-bottom: 10px;
-    }
-    .form-group {
-      margin-bottom: 18px;
-    }
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 6px;
-      color: #5f6368;
-      font-size: 14px;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: #333; }
+    form div { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
     input[type="text"], input[type="color"] {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #dadce0;
+      padding: 8px;
+      border: 1px solid #ccc;
       border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    input[type="text"]:focus, input[type="color"]:focus {
-        border-color: #4a90e2;
-        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-        outline: none;
-    }
-    input[type="color"] {
-      height: 42px;
-      padding: 4px;
-    }
-    .button-bar {
-      text-align: right;
-      margin-top: 25px;
     }
     button {
-      background-color: #4a90e2;
+      padding: 10px 20px;
+      background-color: #007bff;
       color: white;
       border: none;
-      padding: 10px 20px;
       border-radius: 4px;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 14px;
-      transition: background-color 0.3s;
     }
-    button:hover {
-      background-color: #357abd;
+    button:hover { background-color: #0056b3; }
+    .section-header {
+      margin-top: 25px;
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
     }
-    button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
     }
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #323232;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 4px;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s, visibility 0.3s;
-      z-index: 1000;
-    }
-    #toast.show {
-      visibility: visible;
-      opacity: 1;
-    }
-    .preview-header {
-      padding: 30px;
-      border-radius: 8px;
-      text-align: center;
-      transition: background-color 0.3s;
-    }
-    .preview-title {
-      font-size: 28px;
-      font-weight: 500;
-      margin: 0;
-    }
-    .preview-tagline {
-      font-size: 15px;
-      opacity: 0.9;
-      margin-top: 5px;
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🎨 Branding Editor</h1>
-    <div class="editor-grid">
-      <div class="form-section">
-        <h2>Application Identity</h2>
-        
-        <div class="form-group">
-          <label for="appName">Application Name</label>
-          <input type="text" id="appName" oninput="updatePreview()">
-        </div>
-        
-        <div class="form-group">
-          <label for="appTagline">Tagline</label>
-          <input type="text" id="appTagline" oninput="updatePreview()">
-        </div>
+  <h2>🎨 Edit Branding & Styling</h2>
+  <form id="brandingForm">
+    
+    <div class="section-header">Application Identity</div>
+    <div>
+      <label for="appName">App Name:</label>
+      <input type="text" id="appName">
+    </div>
+    <div>
+      <label for="appTagline">App Tagline:</label>
+      <input type="text" id="appTagline">
+    </div>
+    <div>
+      <label for="appIcon">App Icon (Emoji):</label>
+      <input type="text" id="appIcon" placeholder="🔧">
+    </div>
 
-        <div class="form-group">
-          <label for="appIcon">App Icon (Emoji)</label>
-          <input type="text" id="appIcon" placeholder="🔧">
-        </div>
-
-        <div class="form-group">
-          <label for="companyName">Company Name</label>
-          <input type="text" id="companyName">
-        </div>
-
-        <h2 style="margin-top: 30px;">Color Scheme</h2>
-
-        <div class="form-group">
-          <label for="primaryColor">Primary Color</label>
-          <input type="color" id="primaryColor" oninput="updatePreview()">
-        </div>
-
-        <div class="form-group">
-          <label for="secondaryColor">Secondary Color</label>
-          <input type="color" id="secondaryColor">
-        </div>
-
-        <div class="form-group">
-          <label for="accentColor">Accent Color</label>
-          <input type="color" id="accentColor">
-        </div>
-
-        <div class="form-group">
-          <label for="successColor">Success Color</label>
-          <input type="color" id="successColor">
-        </div>
-
-        <div class="form-group">
-          <label for="warningColor">Warning Color</label>
-          <input type="color" id="warningColor">
-        </div>
-
-        <div class="form-group">
-          <label for="dangerColor">Danger Color</label>
-          <input type="color" id="dangerColor">
-        </div>
-
-        <h2 style="margin-top: 30px;">Product Category Icons</h2>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div class="form-group">
-            <label for="bhacIcon">BHAC Icon</label>
-            <input type="text" id="bhacIcon" placeholder="🍺">
-          </div>
-          
-          <div class="form-group">
-            <label for="dtacIcon">DTAC Icon</label>
-            <input type="text" id="dtacIcon" placeholder="🥃">
-          </div>
-          
-          <div class="form-group">
-            <label for="cpacIcon">CPAC Icon</label>
-            <input type="text" id="cpacIcon" placeholder="🧽">
-          </div>
-          
-          <div class="form-group">
-            <label for="ghacIcon">GHAC Icon</label>
-            <input type="text" id="ghacIcon" placeholder="🌾">
-          </div>
-          
-          <div class="form-group">
-            <label for="agacIcon">AGAC Icon</label>
-            <input type="text" id="agacIcon" placeholder="⚙️">
-          </div>
-        </div>
-
-        <h2 style="margin-top: 30px;">Action Icons</h2>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-          <div class="form-group">
-            <label for="addIcon">Add Icon</label>
-            <input type="text" id="addIcon" placeholder="➕">
-          </div>
-          
-          <div class="form-group">
-            <label for="removeIcon">Remove Icon</label>
-            <input type="text" id="removeIcon" placeholder="❌">
-          </div>
-          
-          <div class="form-group">
-            <label for="editIcon">Edit Icon</label>
-            <input type="text" id="editIcon" placeholder="✏️">
-          </div>
-          
-          <div class="form-group">
-            <label for="saveIcon">Save Icon</label>
-            <input type="text" id="saveIcon" placeholder="💾">
-          </div>
-          
-          <div class="form-group">
-            <label for="generateIcon">Generate Icon</label>
-            <input type="text" id="generateIcon" placeholder="✨">
-          </div>
-        </div>
-
-        <div class="button-bar">
-          <button id="saveButton" onclick="saveSettings()">Save Changes</button>
-        </div>
+    <div class="section-header">Colors</div>
+    <div class="form-grid">
+      <div>
+        <label for="primaryColor">Primary Color:</label>
+        <input type="color" id="primaryColor">
       </div>
-
-      <div class="preview-section">
-        <h2>Live Preview</h2>
-        <div id="preview" class="preview-header">
-          <div id="previewTitle" class="preview-title">CraftQuote</div>
-          <div id="previewTagline" class="preview-tagline">Professional Automation Quote Builder</div>
-        </div>
+      <div>
+        <label for="secondaryColor">Secondary Color:</label>
+        <input type="color" id="secondaryColor">
+      </div>
+      <div>
+        <label for="accentColor">Accent Color:</label>
+        <input type="color" id="accentColor">
+      </div>
+      <div>
+        <label for="backgroundColor">Background Color:</label>
+        <input type="color" id="backgroundColor">
       </div>
     </div>
-  </div>
 
-  <div id="toast"></div>
+    <div class="section-header">Logo Settings</div>
+    <div>
+      <label for="logoUrl">Logo URL:</label>
+      <input type="text" id="logoUrl" placeholder="https://example.com/logo.png">
+    </div>
+    <div>
+      <label for="logoHeight">Logo Height:</label>
+      <input type="text" id="logoHeight" placeholder="50px">
+    </div>
+
+    <div class="section-header">Button Styling</div>
+    <div class="form-grid">
+      <div>
+        <label for="buttonRadius">Button Corner Radius:</label>
+        <input type="text" id="buttonRadius" placeholder="4px">
+      </div>
+      <div>
+        <label for="buttonPadding">Button Padding:</label>
+        <input type="text" id="buttonPadding" placeholder="10px 20px">
+      </div>
+    </div>
+
+    <div class="section-header">Icons</div>
+    <div class="form-grid-3">
+      <div>
+        <label for="quoteIcon">Quote Icon:</label>
+        <input type="text" id="quoteIcon" placeholder="📋">
+      </div>
+      <div>
+        <label for="componentIcon">Component Icon:</label>
+        <input type="text" id="componentIcon" placeholder="⚙️">
+      </div>
+      <div>
+        <label for="templateIcon">Template Icon:</label>
+        <input type="text" id="templateIcon" placeholder="�">
+      </div>
+      <div>
+        <label for="infoIcon">Info Icon:</label>
+        <input type="text" id="infoIcon" placeholder="💡">
+      </div>
+    </div>
+
+    <button type="button" onclick="saveBranding()">Save Changes</button>
+  </form>
 
   <script>
-    let currentConfig = {};
-    const saveButton = document.getElementById('saveButton');
-
-    document.addEventListener("DOMContentLoaded", function() {
-      saveButton.disabled = true;
+    document.addEventListener('DOMContentLoaded', function() {
       google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            currentConfig = response.config;
-            populateForm(currentConfig);
-            updatePreview();
-            saveButton.disabled = false;
-          } else {
-            showToast("Error: " + response.error);
-          }
-        })
-        .withFailureHandler(function(error) {
-          showToast("Error loading settings: " + error.message);
-        })
+        .withSuccessHandler(loadBrandingSettings)
         .getBrandingConfig();
     });
 
-    function populateForm(config) {
-      for (const key in config) {
-        const element = document.getElementById(key);
-        if (element) {
-          element.value = config[key];
-        }
-      }
+    function loadBrandingSettings(settings) {
+      document.getElementById('appName').value = settings.app.name;
+      document.getElementById('appTagline').value = settings.app.tagline;
+      document.getElementById('appIcon').value = settings.icons.app;
+      document.getElementById('primaryColor').value = settings.colors.primary;
+      document.getElementById('secondaryColor').value = settings.colors.secondary;
+      document.getElementById('accentColor').value = settings.colors.accent;
+      document.getElementById('backgroundColor').value = settings.colors.background;
+      document.getElementById('logoUrl').value = settings.logo.url;
+      document.getElementById('logoHeight').value = settings.logo.height;
+      document.getElementById('buttonRadius').value = settings.buttons.borderRadius;
+      document.getElementById('buttonPadding').value = settings.buttons.padding;
+      document.getElementById('quoteIcon').value = settings.icons.quote;
+      document.getElementById('componentIcon').value = settings.icons.component;
+      document.getElementById('templateIcon').value = settings.icons.template;
+      document.getElementById('infoIcon').value = settings.icons.info;
     }
 
-    function updatePreview() {
-      const appName = document.getElementById('appName').value;
-      const appTagline = document.getElementById('appTagline').value;
-      const primaryColor = document.getElementById('primaryColor').value;
-
-      document.getElementById('previewTitle').textContent = appName;
-      document.getElementById('previewTagline').textContent = appTagline;
-      document.getElementById('preview').style.backgroundColor = primaryColor;
-      
-      const textColor = getContrastYIQ(primaryColor);
-      document.getElementById('previewTitle').style.color = textColor;
-      document.getElementById('previewTagline').style.color = textColor;
-    }
-
-    function getContrastYIQ(hexcolor){
-      hexcolor = hexcolor.replace("#", "");
-      const r = parseInt(hexcolor.substr(0,2),16);
-      const g = parseInt(hexcolor.substr(2,2),16);
-      const b = parseInt(hexcolor.substr(4,2),16);
-      const yiq = ((r*299)+(g*587)+(b*114))/1000;
-      return (yiq >= 128) ? '#202124' : 'white';
-    }
-
-    function saveSettings() {
-      // Collect all form values that match the branding config keys
-      const newConfig = {
+    function saveBranding() {
+      const newSettings = {
         appName: document.getElementById('appName').value,
         appTagline: document.getElementById('appTagline').value,
         appIcon: document.getElementById('appIcon').value,
-        companyName: document.getElementById('companyName').value,
         primaryColor: document.getElementById('primaryColor').value,
         secondaryColor: document.getElementById('secondaryColor').value,
         accentColor: document.getElementById('accentColor').value,
-        successColor: document.getElementById('successColor').value,
-        warningColor: document.getElementById('warningColor').value,
-        dangerColor: document.getElementById('dangerColor').value,
-        bhacIcon: document.getElementById('bhacIcon').value,
-        dtacIcon: document.getElementById('dtacIcon').value,
-        cpacIcon: document.getElementById('cpacIcon').value,
-        ghacIcon: document.getElementById('ghacIcon').value,
-        agacIcon: document.getElementById('agacIcon').value,
-        addIcon: document.getElementById('addIcon').value,
-        removeIcon: document.getElementById('removeIcon').value,
-        editIcon: document.getElementById('editIcon').value,
-        saveIcon: document.getElementById('saveIcon').value,
-        generateIcon: document.getElementById('generateIcon').value
+        backgroundColor: document.getElementById('backgroundColor').value,
+        logoUrl: document.getElementById('logoUrl').value,
+        logoHeight: document.getElementById('logoHeight').value,
+        buttonRadius: document.getElementById('buttonRadius').value,
+        buttonPadding: document.getElementById('buttonPadding').value,
+        quoteIcon: document.getElementById('quoteIcon').value,
+        componentIcon: document.getElementById('componentIcon').value,
+        templateIcon: document.getElementById('templateIcon').value,
+        infoIcon: document.getElementById('infoIcon').value,
       };
 
-      saveButton.disabled = true;
-      showToast("Saving...", 5000);
       google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            showToast("Settings saved successfully!");
-            currentConfig = newConfig; // Update local state
-          } else {
-            showToast("Error: " + response.message);
-          }
-          saveButton.disabled = false;
+        .withSuccessHandler(function(msg) {
+          alert(msg);
         })
-        .withFailureHandler(function(error) {
-          showToast("Error saving settings: " + error.message);
-          saveButton.disabled = false;
-        })
-        .saveBrandingConfig(newConfig);
-    }
-
-    function showToast(message, duration = 3000) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.className = "show";
-      setTimeout(function() { 
-        toast.className = toast.className.replace("show", ""); 
-      }, duration);
+        .saveBrandingConfig(newSettings);
     }
   </script>
 </body>

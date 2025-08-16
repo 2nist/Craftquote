@@ -1,0 +1,42 @@
+# Only push curated V2 system and backend. Ignore legacy, documentation, and organized directories.
+**/*
+
+!appsscript.json
+!CompleteMasterCatalogSystem_V2.gs
+!CsvCatalogImporter.gs
+!CsvDiagnostic.gs
+!HybridAssemblerBackend.gs
+!Config.gs
+!HybridComponentAssembler.html
+!AssemblyEditor.html
+!SetCsvIdDialog.html
+!NasExplorer.gs
+!NetworkFileExplorer.html
+!Branding.gs
+!BrandingEditor.html
+!BrandingDemo.html
+!SystemTestingTracker.gs
+
+# Block organized directories (professional structure)
+archive/**
+documentation/**
+testing/**
+scripts/**
+legacy/**
+
+# Block legacy/conflicting menus and helpers
+MenuFunctions.gs
+MasterCatalogSetupMenu.gs
+AllInOneMasterCatalogSetup.gs
+CompleteMasterCatalogSystem.gs
+SimpleMenuFix.gs
+MenuTriggers.gs
+BatchCatalogProcessor.gs
+professional_menu.gs
+
+# Ignore generated files and development utilities
+**/*.js
+**/backup/**
+README*.md
+GUIDE*.md
+SETUP*.md
