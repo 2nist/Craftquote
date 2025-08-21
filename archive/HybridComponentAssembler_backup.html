@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>Hybrid Component Assembler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .workspace-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Panel - Quote Canvas */
+        .quote-canvas {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.8);
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-header {
+            background: #1e293b;
+            padding: 15px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .canvas-title {
+            color: #60a5fa;
+            font-size: 1.2em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .mode-selector {
+            display: flex;
+            background: #334155;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .mode-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+        }
+
+        .mode-tab.active {
+            background: #60a5fa;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .mode-tab:hover:not(.active) {
+            background: rgba(96, 165, 250, 0.2);
+            color: #e2e8f0;
+        }
+
+        .canvas-workspace {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Template Launcher */
+        .template-launcher {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px dashed #334155;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .template-launcher:hover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .template-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.1);
+        }
+
+        .template-card .icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .template-card .name {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+
+        .template-card .price {
+            color: #10b981;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        /* Quote Assembly Area */
+        .quote-assembly {
+            min-height: 400px;
+        }
+
+        .assembly-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .assembly-item:hover {
+            border-color: #60a5fa;
+        }
+
+        .assembly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .assembly-name {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .assembly-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            background: #334155;
+            border: none;
+            color: #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #475569;
+        }
+
+        .control-btn.edit {
+            background: #f59e0b;
+        }
+
+        .control-btn.remove {
+            background: #ef4444;
+        }
+
+        .assembly-components {
+            color: #94a3b8;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        /* Right Panel - Component Library */
+        .component-library {
+            width: 400px;
+            background: rgba(30, 41, 59, 0.9);
+            border-left: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .library-header {
+            background: #1e293b;
+            padding: 15px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .library-title {
+            color: #60a5fa;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .filter-tag {
+            background: #334155;
+            color: #94a3b8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tag.active,
+.filter-tag:hover {
+            background: #60a5fa;
+            color: #0f172a;
+        }
+
+        .library-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .component-group {
+            margin-bottom: 20px;
+        }
+
+        .group-header {
+            color: #60a5fa;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #334155;
+            font-size: 0.9em;
+        }
+
+        .component-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .component-item:hover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .component-name {
+            color: #e2e8f0;
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+
+        .component-details {
+            color: #94a3b8;
+            font-size: 0.8em;
+            line-height: 1.3;
+        }
+
+        .component-price {
+            color: #10b981;
+            font-weight: 500;
+            margin-top: 4px;
+            font-size: 0.85em;
+        }
+
+        /* Bottom Controls */
+        .canvas-controls {
+            background: #1e293b;
+            padding: 15px;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        /* Quote Info Panel */
+        .quote-info {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quote-info h3 {
+            color: #60a5fa;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.85em;
+        }
+
+        .info-item {
+            color: #94a3b8;
+        }
+
+        .info-value {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        /* Smart Suggestions */
+        .smart-suggestions {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .suggestions-header {
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .suggestion-item {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .component-library {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .workspace-container {
+                flex-direction: column;
+            }
+            
+            .component-library {
+                width: 100%;
+                height: 40vh;
+            }
+        }
+
+        /* Animation */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .component-item.adding {
+            animation: slideInRight 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="workspace-container">
+        <!-- Left Panel - Quote Canvas -->
+        <div class="quote-canvas">
+            <div class="canvas-header">
+                <div class="canvas-title">
+                    Hybrid Component Assembler
+                </div>
+                <div class="mode-selector">
+                    <button class="mode-tab active" onclick="switchMode('hybrid')">Hybrid</button>
+                    <button class="mode-tab" onclick="switchMode('template')">Template</button>
+                    <button class="mode-tab" onclick="switchMode('assembly')">Assembly</button>
+                </div>
+            </div>
+
+            <div class="canvas-workspace">
+                <!-- Quote Information -->
+                <div class="quote-info">
+                    <h3>Quote Configuration</h3>
+                    <div class="info-grid">
+                        <div class="info-item">Product: <span class="info-value" id="productType">Select Template or Build Custom</span></div>
+                        <div class="info-item">Customer: <span class="info-value" id="customerName">TBD</span></div>
+                        <div class="info-item">Voltage: <span class="info-value" id="systemVoltage">480V</span></div>
+                        <div class="info-item">Components: <span class="info-value" id="componentCount">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Template Launcher (Hybrid Mode) -->
+                <div class="template-launcher" id="templateLauncher">
+                    <h3 style="color: #60a5fa; margin-bottom: 10px;">Quick Start with Smart Templates</h3>
+                    <p style="color: #94a3b8; margin-bottom: 20px;">Load a proven template, then customize with full freedom</p>
+                    
+                    <div class="template-grid">
+                        <div class="template-card" onclick="loadTemplate('BHAC')">
+                            <div class="icon">🍺</div>
+                            <div class="name">BHAC</div>
+                            <div class="price">~$4,528</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('DTAC')">
+                            <div class="icon">🥃</div>
+                            <div class="name">DTAC</div>
+                            <div class="price">~$4,202</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('CPAC')">
+                            <div class="icon">🧽</div>
+                            <div class="name">CPAC</div>
+                            <div class="price">~$8,643</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('AGAC')">
+                            <div class="icon">🌾</div>
+                            <div class="name">AGAC</div>
+                            <div class="price">~$6,379</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('GHAC')">
+                            <div class="icon">A</div>
+                            <div class="name">GHAC</div>
+                            <div class="price">~$7,523</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('CUSTOM')">
+                            <div class="icon">T</div>
+                            <div class="name">Custom</div>
+                            <div class="price">Build from scratch</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Suggestions -->
+                <div class="smart-suggestions" id="smartSuggestions" style="display: none;">
+                    <div class="suggestions-header">💡 Smart Suggestions</div>
+                    <div id="suggestionsList">
+                        <!-- Dynamic suggestions will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Quote Assembly Area -->
+                <div class="quote-assembly" id="quoteAssembly">
+                    <div style="text-align: center; color: #64748b; padding: 40px; font-style: italic;">
+                        Load a template or start building your custom quote...
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-controls">
+                <div class="control-group">
+                    <button class="btn btn-secondary" onclick="clearQuote()">Clear All</button>
+                    <button class="btn btn-secondary" onclick="saveAsTemplate()">Save as Template</button>
+                    <button class="btn btn-secondary" onclick="validateQuote()">Validate</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-primary" onclick="generateQuote()">Generate Quote</button>
+                    <button class="btn btn-secondary" onclick="generateBOM()">Generate BOM</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Component Library -->
+        <div class="component-library">
+            <div class="library-header">
+                <div class="library-title">Component Library</div>
+                <input type="text" class="search-box" placeholder="Search components..." id="componentSearch" oninput="filterComponents()">
+                <div class="filter-tags">
+                    <div class="filter-tag active" onclick="filterByCategory('all')">All</div>
+                    <div class="filter-tag" onclick="filterByCategory('enclosures')">Enclosures</div>
+                    <div class="filter-tag" onclick="filterByCategory('control')">Control</div>
+                    <div class="filter-tag" onclick="filterByCategory('motor')">Motor</div>
+                    <div class="filter-tag" onclick="filterByCategory('safety')">Safety</div>
+                </div>
+            </div>
+
+            <div class="library-content" id="libraryContent">
+                <div class="component-group">
+                    <div class="group-header">🏠 Enclosures & Panels</div>
+                    <div class="component-item" onclick="addComponent('ENC-60x36x12')">
+                        <div class="component-name">60"×36"×12" Type 4 Enclosure</div>
+                        <div class="component-details">Grey painted steel, NEMA 4<br>Standard industrial enclosure</div>
+                        <div class="component-price">$561.97</div>
+                    </div>
+                    <div class="component-item" onclick="addComponent('ENC-42x36x10-SS')">
+                        <div class="component-name">42"×36"×10" Stainless Enclosure</div>
+                        <div class="component-details">Type 4X stainless steel<br>Food grade applications</div>
+                        <div class="component-price">$892.12</div>
+                    </div>
+                </div>
+
+                <div class="component-group">
+                    <div class="group-header">Control Systems</div>
+                    <div class="component-item" onclick="addComponent('PLC-IDEC-40IO')">
+                        <div class="component-name">IDEC 40 I/O PLC</div>
+                        <div class="component-details">24VDC, 24IN/16RO<br>RS485 & Ethernet</div>
+                        <div class="component-price">$310.00</div>
+                    </div>
+                    <div class="component-item" onclick="addComponent('HMI-12IN')">
+                        <div class="component-name">12.1" Color HMI</div>
+                        <div class="component-details">65K Color, 1024×768<br>Touch screen interface</div>
+                        <div class="component-price">$1,085.00</div>
+                    </div>
+                </div>
+
+                <div class="component-group">
+                    <div class="group-header">Power & Motor Control</div>
+                    <div class="component-item" onclick="addComponent('VFD-1.5HP')">
+                        <div class="component-name">1.5HP VFD Drive</div>
+                        <div class="component-details">ABB ACS355, 480V<br>NEMA 1 enclosure</div>
+                        <div class="component-price">$270.48</div>
+                    </div>
+                    <div class="component-item" onclick="addComponent('DISCONNECT-60A')">
+                        <div class="component-name">60A Non-Fused Disconnect</div>
+                        <div class="component-details">3-pole disconnect switch<br>NEMA 1 enclosure</div>
+                        <div class="component-price">$103.32</div>
+                    </div>
+                </div>
+
+                <div class="component-group">
+                    <div class="group-header">Safety Systems</div>
+                    <div class="component-item" onclick="addComponent('SAFETY-RELAY')">
+                        <div class="component-name">Safety Relay System</div>
+                        <div class="component-details">AB MSR127RP<br>24VAC/DC, 3NO/1NC</div>
+                        <div class="component-price">$139.20</div>
+                    </div>
+                    <div class="component-item" onclick="addComponent('E-STOP')">
+                        <div class="component-name">Emergency Stop Button</div>
+                        <div class="component-details">Red mushroom head<br>22mm mounting</div>
+                        <div class="component-price">$22.44</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'hybrid';
+        let quoteData = {
+            components: [],
+            productType: '',
+            customerInfo: {},
+            configuration: {}
+        };
+
+        // Mode switching
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update active tab
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update interface based on mode
+            updateInterface();
+        }
+
+        function updateInterface() {
+            const templateLauncher = document.getElementById('templateLauncher');
+            
+            switch(currentMode) {
+                case 'template':
+                    templateLauncher.style.display = 'block';
+                    break;
+                case 'assembly':
+                    templateLauncher.style.display = 'none';
+                    break;
+                case 'hybrid':
+                default:
+                    templateLauncher.style.display = 'block';
+                    break;
+            }
+        }
+
+        // Template loading
+        function loadTemplate(templateType) {
+            if (templateType === 'CUSTOM') {
+                clearQuote();
+                document.getElementById('productType').textContent = 'Custom Build';
+                document.getElementById('templateLauncher').style.display = 'none';
+                return;
+            }
+
+            // Show loading and set product type
+            document.getElementById('productType').textContent = templateType;
+            
+            // Check if running in Google Apps Script environment
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                // Google Apps Script environment - call backend
+                google.script.run
+                    .withSuccessHandler(handleTemplateLoaded)
+                    .withFailureHandler(handleTemplateError)
+                    .loadProductTemplate(templateType);
+            } else {
+                // Standalone test environment - use mock data
+                const mockTemplateData = getMockTemplateData(templateType);
+                setTimeout(() => handleTemplateLoaded(mockTemplateData), 500); // Simulate loading delay
+            }
+        }
+
+        // Mock template data for standalone testing
+        function getMockTemplateData(templateType) {
+            const templates = {
+                'BHAC': {
+                    productType: 'Brewery Heat Automation Control',
+                    components: [
+                        { id: 'A8066CHFL', name: '8Hx6Wx6D Grey Type 4 Enclosure', description: '8Hx6Wx6D Grey Type 4 Enclosure', unitPrice: 65.91, quantity: 1 },
+                        { id: 'CSD16126', name: '16Hx12Wx6D Grey Type 4 Enclosure', description: '16Hx12Wx6D Grey Type 4 Enclosure', unitPrice: 178.35, quantity: 1 },
+                        { id: 'CSD16166', name: '16Hx16Wx6D Grey Type 4 Enclosure', description: '16Hx16Wx6D Grey Type 4 Enclosure', unitPrice: 191.65, quantity: 1 },
+                        { id: 'CSD20208', name: '20Hx20Wx8D Grey Type 4 Enclosure', description: '20Hx20Wx8D Grey Type 4 Enclosure', unitPrice: 233.64, quantity: 1 }
+                    ],
+                    suggestions: ['Consider adding steam control module', 'Upgrade to redundant temperature monitoring']
+                },
+                'DTAC': {
+                    productType: 'Distillery Temperature Automation Control',
+                    components: [
+                        { id: 'A10106CHFL', name: '10Hx10Wx6D Grey Type 4 Enclosure', description: '10Hx10Wx6D Grey Type 4 Enclosure', unitPrice: 84.23, quantity: 1 },
+                        { id: 'A16148CHFL', name: '16Hx14Wx8D Grey Type 4 Enclosure', description: '16Hx14Wx8D Grey Type 4 Enclosure', unitPrice: 138.51, quantity: 1 },
+                        { id: 'CSD16610', name: '16Hx16Wx10D Grey Type 4 Enclosure', description: '16Hx16Wx10D Grey Type 4 Enclosure', unitPrice: 206.20, quantity: 1 },
+                        { id: 'CP1612G', name: 'Galvanized Subpanel for 16x12 Enclosure', description: 'Galvanized Subpanel for 16x12 Enclosure', unitPrice: 8.00, quantity: 1 }
+                    ],
+                    suggestions: ['Add vapor recovery system', 'Consider ethanol vapor detection']
+                },
+                'CPAC': {
+                    productType: 'CIP Automated Control',
+                    components: [
+                        { id: 'CSD20160SS', name: 'STAINLESS 20Hx16Wx10D Type 4x Enclosure', description: 'STAINLESS 20Hx16Wx10D Type 4x Enclosure', unitPrice: 723.32, quantity: 1 },
+                        { id: 'CSD20168SS', name: 'STAINLESS 20Hx16Wx8D Type 4x Enclosure', description: 'STAINLESS 20Hx16Wx8D Type 4x Enclosure', unitPrice: 427.72, quantity: 1 },
+                        { id: 'CP2016G', name: 'Galvanized Subpanel for 20x16 Enclosure', description: 'Galvanized Subpanel for 20x16 Enclosure', unitPrice: 23.31, quantity: 1 },
+                        { id: 'CP2020G', name: 'Galvanized Subpanel for 20x20 enclosure', description: 'Galvanized Subpanel for 20x20 enclosure', unitPrice: 27.98, quantity: 1 }
+                    ],
+                    suggestions: ['Upgrade to wireless monitoring', 'Add mobile app control']
+                },
+                'AGAC': {
+                    productType: 'Advanced Grain Automation Control',
+                    components: [
+                        { id: 'CSD20206', name: '20Hx20Wx6D Grey Type 4 Enclosure', description: '20Hx20Wx6D Grey Type 4 Enclosure', unitPrice: 181.47, quantity: 1 },
+                        { id: 'CSD20208', name: '20Hx20Wx8D Grey Type 4 Enclosure', description: '20Hx20Wx8D Grey Type 4 Enclosure', unitPrice: 233.64, quantity: 1 },
+                        { id: 'CSD20210', name: '20Hx20Wx10D Grey Type 4 Enclosure', description: '20Hx20Wx10D Grey Type 4 Enclosure', unitPrice: 239.88, quantity: 1 },
+                        { id: 'CP2020G', name: 'Galvanized Subpanel for 20x20 enclosure', description: 'Galvanized Subpanel for 20x20 enclosure', unitPrice: 27.98, quantity: 1 }
+                    ],
+                    suggestions: ['Add dust collection automation', 'Consider grain quality monitoring']
+                },
+                'GHAC': {
+                    productType: 'Glycol Heat Automation Control',
+                    components: [
+                        { id: 'A6044CHNFSS', name: '6Hx4Wx4D SS JBOX', description: '6Hx4Wx4D SS JBOX', unitPrice: 161.06, quantity: 1 },
+                        { id: 'A8P6G', name: 'Galvanized Subpanel for 8x6 Enclosure', description: 'Galvanized Subpanel for 8x6 Enclosure', unitPrice: 4.17, quantity: 1 },
+                        { id: 'CP1610G', name: 'Galvanized Subpanel for 16x10 Enclosure', description: 'Galvanized Subpanel for 16x10 Enclosure', unitPrice: 6.70, quantity: 1 },
+                        { id: 'CP1616G', name: 'Galvanized Subpanel for 16x16 Enclosure', description: 'Galvanized Subpanel for 16x16 Enclosure', unitPrice: 20.33, quantity: 1 }
+                    ],
+                    suggestions: ['Add glycol leak detection', 'Consider backup pump system']
+                }
+            };
+
+            return templates[templateType] || {
+                productType: 'Unknown Template',
+                components: [],
+                suggestions: []
+            };
+        }
+
+        function handleTemplateLoaded(templateData) {
+            quoteData.components = templateData.components || [];
+            quoteData.productType = templateData.productType;
+            
+            // Hide template launcher
+            document.getElementById('templateLauncher').style.display = 'none';
+            
+            // Show loaded components
+            updateQuoteDisplay();
+            
+            // Show smart suggestions
+            showSmartSuggestions(templateData.suggestions || []);
+        }
+
+        function handleTemplateError(error) {
+            console.error('Template loading error:', error);
+            alert('Error loading template: ' + error.message);
+        }
+
+        // Component management
+        function addComponent(componentId) {
+            // Add visual feedback
+            event.target.classList.add('adding');
+            
+            setTimeout(() => {
+                event.target.classList.remove('adding');
+            }, 300);
+
+            // Call backend to get component details
+            google.script.run
+                .withSuccessHandler(handleComponentAdded)
+                .withFailureHandler(handleComponentError)
+                .getComponentDetails(componentId);
+        }
+
+        function handleComponentAdded(componentData) {
+            quoteData.components.push(componentData);
+            updateQuoteDisplay();
+            updateSmartSuggestions();
+        }
+
+        function handleComponentError(error) {
+            console.error('Component error:', error);
+            alert('Error adding component: ' + error.message);
+        }
+
+        function removeComponent(index) {
+            quoteData.components.splice(index, 1);
+            updateQuoteDisplay();
+            updateSmartSuggestions();
+        }
+
+        function editComponent(index) {
+            const component = quoteData.components[index];
+            // Open component editor (to be implemented)
+            console.log('Edit component:', component);
+        }
+
+        // Display updates
+        function updateQuoteDisplay() {
+            const assemblyDiv = document.getElementById('quoteAssembly');
+            
+            if (quoteData.components.length === 0) {
+                assemblyDiv.innerHTML = `
+                    <div style="text-align: center; color: #64748b; padding: 40px; font-style: italic;">
+                        Load a template or start building your custom quote...
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            quoteData.components.forEach((component, index) => {
+                html += `
+                    <div class="assembly-item">
+                        <div class="assembly-header">
+                            <div class="assembly-name">${component.name}</div>
+                            <div class="assembly-controls">
+                                <button class="control-btn edit" onclick="editComponent(${index})">Edit</button>
+                                <button class="control-btn remove" onclick="removeComponent(${index})">Remove</button>
+                            </div>
+                        </div>
+                        <div class="assembly-components">
+                            ${component.description}<br>
+                            <strong style="color: #10b981;">$${component.price}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+
+            assemblyDiv.innerHTML = html;
+            
+            // Update component count
+            document.getElementById('componentCount').textContent = quoteData.components.length;
+        }
+
+        function showSmartSuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('smartSuggestions');
+            const suggestionsList = document.getElementById('suggestionsList');
+            
+            if (suggestions.length > 0) {
+                let html = '';
+                suggestions.forEach(suggestion => {
+                    html += `
+                        <div class="suggestion-item" onclick="addComponent('${suggestion.id}')">
+                            ${suggestion.name} - ${suggestion.reason}
+                        </div>
+                    `;
+                });
+                
+                suggestionsList.innerHTML = html;
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+
+        function updateSmartSuggestions() {
+            // Call backend for suggestions based on current components
+            google.script.run
+                .withSuccessHandler(showSmartSuggestions)
+                .getSmartSuggestions(quoteData.components);
+        }
+
+        // Search and filtering
+        function filterComponents() {
+            const searchTerm = document.getElementById('componentSearch').value.toLowerCase();
+            const components = document.querySelectorAll('.component-item');
+            
+            components.forEach(component => {
+                const text = component.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    component.style.display = 'block';
+                } else {
+                    component.style.display = 'none';
+                }
+            });
+        }
+
+        function filterByCategory(category) {
+            // Update active filter
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide component groups
+            const groups = document.querySelectorAll('.component-group');
+            
+            if (category === 'all') {
+                groups.forEach(group => group.style.display = 'block');
+                return;
+            }
+            
+            const categoryMap = {
+                'enclosures': ['Enclosures'],
+                'control': ['Control Systems'],
+                'motor': ['Power & Motor'],
+                'safety': ['Safety Systems']
+            };
+            
+            groups.forEach(group => {
+                const header = group.querySelector('.group-header').textContent;
+                const shouldShow = categoryMap[category].some(cat => header.includes(cat));
+                group.style.display = shouldShow ? 'block' : 'none';
+            });
+        }
+
+        // Quote operations
+        function clearQuote() {
+            quoteData.components = [];
+            updateQuoteDisplay();
+            document.getElementById('productType').textContent = 'Select Template or Build Custom';
+            document.getElementById('templateLauncher').style.display = 'block';
+            document.getElementById('smartSuggestions').style.display = 'none';
+        }
+
+        function saveAsTemplate() {
+            const templateName = prompt('Enter template name:');
+            if (templateName) {
+                google.script.run
+                    .withSuccessHandler(() => alert('Template saved successfully!'))
+                    .withFailureHandler(error => alert('Error saving template: ' + error.message))
+                    .saveAsTemplate(templateName, quoteData);
+            }
+        }
+
+        function validateQuote() {
+            google.script.run
+                .withSuccessHandler(handleValidationResult)
+                .withFailureHandler(error => alert('Validation error: ' + error.message))
+                .validateQuote(quoteData);
+        }
+
+        function handleValidationResult(validation) {
+            if (validation.isValid) {
+                alert('Quote validated successfully!\n\n' + validation.summary);
+            } else {
+                alert('⚠️ Validation Issues Found:\n\n' + validation.issues.join('\n'));
+            }
+        }
+
+        function generateQuote() {
+            if (quoteData.components.length === 0) {
+                alert('Please add components to your quote before generating.');
+                return;
+            }
+            
+            // Open customer information dialog
+            openCustomerInfoDialog();
+        }
+
+        function openCustomerInfoDialog() {
+            google.script.run
+                .withSuccessHandler(showCustomerDialog)
+                .withFailureHandler(error => alert('Error opening customer form: ' + error.message))
+                .getCustomerInfoForm();
+        }
+
+        function showCustomerDialog(htmlOutput) {
+            const dialog = HtmlService.createHtmlOutput(htmlOutput.getContent())
+                .setWidth(500)
+                .setHeight(600)
+                .setTitle('Customer Information Required');
+            SpreadsheetApp.getUi().showModalDialog(dialog, 'Generate Professional Quote');
+        }
+
+        // Function to provide quote data to customer info dialog
+        window.getQuoteData = function() {
+            return {
+                components: quoteData.components,
+                productType: quoteData.productType || document.getElementById('productType').textContent,
+                totalComponents: quoteData.components.length,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function handleQuoteGenerated(result) {
+            if (result.success) {
+                alert('Professional Quote Generated!\n\n' + 
+                      'Quote Number: ' + result.quoteNumber + '\n' +
+                      'Sheet: ' + result.sheetName + '\n\n' +
+                      'Your professional quote is ready for customer delivery!');
+            } else {
+                alert('Quote generation failed: ' + result.error);
+            }
+        }
+
+        function generateBOM() {
+            google.script.run
+                .withSuccessHandler(handleBOMGenerated)
+                .withFailureHandler(error => alert('BOM generation error: ' + error.message))
+                .generateBOMFromAssembly(quoteData);
+        }
+
+        function handleBOMGenerated(result) {
+            if (result.success) {
+                alert('BOM generated successfully!\n\nSheet: ' + result.sheetName);
+            } else {
+                alert('BOM generation failed: ' + result.message);
+            }
+        }
+
+        // Initialize
+        updateInterface();
+    </script>
+</body>
+</html>

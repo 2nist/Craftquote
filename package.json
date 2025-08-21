@@ -1,0 +1,17 @@
+{
+  "name": "craftquote",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --outfile=dist/code.js --format=iife --platform=browser",
+    "push": "npm run build && clasp push",
+    "pull": "clasp pull",
+    "deploy": "npm run push && clasp deploy"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83",
+    "esbuild": "^0.23.0",
+    "typescript": "^5.5.4"
+  }
+}
