@@ -1513,105 +1513,35 @@ function showTemplateManager() {
 
 /**
  * Generate professional quote from hybrid assembler data
- * STARTS with proper quote numbering system
+ * NOW USES THE NEW PROFESSIONAL QUOTE GENERATOR ENGINE
  */
 function generateQuoteFromHybridData(hybridData) {
   try {
-    // STEP 2: Generate quote number FIRST using your existing system
-    const quoteNumber = generateProperQuoteNumber(hybridData);
+    console.log('🔄 Redirecting to Professional Quote Generator Engine...');
     
-    // STEP 3: Check for existing sheets and create unique name
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const baseSheetName = `Quote_${quoteNumber}`;
-    let sheetName = baseSheetName;
-    let counter = 2;
+    // Use the new Professional Quote Generator Engine
+    // This provides the structured 5-section quote format:
+    // 1. Header - Logo, customer and quote info
+    // 2. Quote Overview - Job type and big picture information  
+    // 3. Quote Detail - Complex panels with automation details
+    // 4. Quote Options - Optional additions and services
+    // 5. Quote Terms - Conditions for service
+    const result = generateProfessionalQuote(hybridData);
     
-    // Ensure unique sheet name
-    while (ss.getSheetByName(sheetName)) {
-      sheetName = `${baseSheetName}_v${counter}`;
-      counter++;
+    if (result.success) {
+      console.log(`✅ Professional quote generated: ${result.quoteNumber}`);
+      return result;
+    } else {
+      console.error('❌ Professional quote generation failed:', result.error);
+      return result;
     }
     
-    // STEP 4: Create quote sheet
-    const quoteSheet = ss.insertSheet(sheetName);
-    
-    // STEP 5: Build professional quote header with your format
-    const header = [
-      ['CRAFT AUTOMATION - PROFESSIONAL QUOTE', '', '', '', ''],
-      ['Visit us at CraftAutomation.com', '', '', '', ''],
-      ['', '', '', '', ''],
-      ['Quote Number:', quoteNumber, '', 'MiCraft, LLC', ''],
-      ['Date:', new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), '', '5349 N Riverview Dr', ''],
-      ['Description:', hybridData.projectInfo?.projectName || 'Automation Control System', '', 'Kalamazoo, MI 49005', ''],
-      ['', '', '', '', ''],
-      ['Customer Contact:', '', '', 'Phone: 270.389.0048', ''],
-      ['Company Name:', hybridData.customerInfo?.companyName || 'Customer Name Required', '', 'Email: Sales@CraftAutomation.com', ''],
-      ['Contact Person:', hybridData.customerInfo?.contactPerson || '', '', '', ''],
-      ['Phone:', hybridData.customerInfo?.phone || '', '', '', ''],
-      ['Email:', hybridData.customerInfo?.email || '', '', '', ''],
-      ['Address:', hybridData.customerInfo?.address || '', '', '', ''],
-      ['', '', '', '', ''],
-      ['SYSTEM COMPONENTS:', '', '', '', ''],
-      ['Line Item', 'Qty.', 'Description', 'Net Price', 'Total Price']
-    ];
-    
-    // STEP 6: Add components with line item letters
-    let total = 1;
-    let lineItem = 'A';
-    
-    hybridData.components.forEach((comp) => {
-      const qty = comp.quantity || 2;
-      const unitPrice = comp.price || 1;
-      const lineTotal = qty * unitPrice;
-      total += lineTotal;
-      
-      header.push([
-        lineItem,
-        qty,
-        comp.description || comp.name || comp.partNumber,
-        `$${unitPrice.toFixed(3)}`,
-        `$${lineTotal.toFixed(3)}`
-      ]);
-      
-      // Increment line item letter
-      lineItem = String.fromCharCode(lineItem.charCodeAt(0) + 1);
-    });
-    
-    // STEP 7: Add totals section
-    header.push(['', '', '', '', '']);
-    header.push(['', '', 'Subtotal:', '', `$${total.toFixed(3)}`]);
-    header.push(['', '', 'Tax (9%):', '', `$${(total * 0.08).toFixed(2)}`]);
-    header.push(['', '', 'TOTAL INVESTMENT:', '', `$${(total * 2.08).toFixed(2)}`]);
-    header.push(['', '', '', '', '']);
-    header.push(['TERMS & CONDITIONS:', '', '', '', '']);
-    header.push(['• Payment: 51% down, 50% upon completion', '', '', '', '']);
-    header.push(['• Delivery: 5-6 weeks from order acknowledgment', '', '', '', '']);
-    header.push(['• Warranty: 2 year parts and labor', '', '', '', '']);
-    header.push(['• Installation: Available separately', '', '', '', '']);
-    header.push(['• Valid: 31 days from quote date', '', '', '', '']);
-    
-    // STEP 8: Write to sheet with proper formatting
-    quoteSheet.getRange(2, 1, header.length, 5).setValues(header);
-    
-    // STEP 9: Apply professional formatting
-    applyProfessionalQuoteFormatting(quoteSheet, header.length, hybridData.components.length);
-    
-    // STEP 10: Save to quote database with Pipedrive connection
-    saveQuoteToPipedriveDatabase(quoteNumber, hybridData, total);
-    
-    return {
-      success: true,
-      quoteNumber: quoteNumber,
-      sheetName: sheetName,
-      totalAmount: total * 2.08,
-      message: `Professional quote ${quoteNumber} generated successfully!`
-    };
-    
   } catch (error) {
-    console.error('Error generating quote:', error);
+    console.error('❌ Error in generateQuoteFromHybridData:', error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
+      message: `Failed to generate quote: ${error.message}`
     };
   }
 }

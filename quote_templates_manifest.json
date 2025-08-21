@@ -1,0 +1,19 @@
+{
+  "templates": [
+    { "id": "Blank", "sheetName": "Blank", "description": "For custom and smaller quotes - minimal layout" },
+    { "id": "GHAC", "sheetName": "GHAC", "description": "Grain Handling Automated Control" },
+    { "id": "GHMC", "sheetName": "GHMC", "description": "Grain Handling Manual Control" },
+    { "id": "CRAC", "sheetName": "CRAC", "description": "Fermentation Automated Control" },
+    { "id": "CRXP", "sheetName": "CRXP", "description": "Fermentation Expansion" },
+    { "id": "SSXS", "sheetName": "SSXS", "description": "Start/Stop Motor Switch" },
+    { "id": "DTAC", "sheetName": "DTAC", "description": "Distillery Automated Control" },
+    { "id": "CPAC", "sheetName": "CPAC", "description": "Clean In Place system" },
+    { "id": "EQUIP", "sheetName": "EQUIP", "description": "Optional Equipment" },
+    { "id": "STCS", "sheetName": "STCS", "description": "Single Tank Controllers" },
+    { "id": "BHAC_BROKENDOWN", "sheetName": "quotetemplate broken down", "description": "BHAC broken down with DTAC and CPAC - composite template" },
+    { "id": "INSTALL", "sheetName": "INSTALL", "description": "Installation & Commissioning Quote" },
+    { "id": "TECHSUPPORT", "sheetName": "TEch Support", "description": "Technical Support Quote" },
+    { "id": "SPARE", "sheetName": "Spare", "description": "Spare Parts Quote" },
+    { "id": "CONCEPT_NEW", "sheetName": "Concept for new formatting", "description": "Design concept: new logo, fonts, layout" }
+  ]
+}

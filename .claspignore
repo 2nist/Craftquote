@@ -6,6 +6,7 @@
 !CsvCatalogImporter.gs
 !CsvDiagnostic.gs
 !HybridAssemblerBackend.gs
+!ProfessionalQuoteGenerator.gs
 !Config.gs
 !HybridComponentAssembler.html
 !AssemblyEditor.html
