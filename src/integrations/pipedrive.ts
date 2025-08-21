@@ -27,3 +27,27 @@ export function listDealFields(): string {
   const res = UrlFetchApp.fetch(url, { method: 'get', muteHttpExceptions: true });
   return res.getContentText();
 }
+
+/**
+ * Upload a PDF file to a Pipedrive Deal as an attachment.
+ * Uses multipart/form-data with the file blob and deal_id.
+ */
+export function uploadPdfToDeal(dealId: string, pdfFileId: string): string {
+  const auth = getAuth();
+  if (!auth) throw new Error('PIPEDRIVE_API_TOKEN not configured');
+  if (!dealId) throw new Error('dealId is required');
+  const file = DriveApp.getFileById(pdfFileId);
+  const url = `${auth.baseUrl}/files?api_token=${encodeURIComponent(auth.apiToken)}`;
+  const payload: GoogleAppsScript.URL_Fetch.Payload = {
+    file: file.getBlob(),
+    deal_id: dealId
+  } as unknown as GoogleAppsScript.URL_Fetch.Payload;
+  const res = UrlFetchApp.fetch(url, {
+    method: 'post',
+    payload,
+    muteHttpExceptions: true
+  });
+  const code = res.getResponseCode();
+  if (code < 200 || code >= 300) throw new Error(`Pipedrive upload failed ${code}: ${res.getContentText()}`);
+  return res.getContentText();
+}
