@@ -15,42 +15,69 @@ export interface ComponentRecord {
   Notes?: string;
 }
 
+function mapRow(hdr: string[], row: any[]): ComponentRecord | null {
+  if (!row[0]) return null;
+  const o: any = {};
+  hdr.forEach((h, i) => {
+    const key = String(h || '').trim();
+    if (!key) return;
+    o[key.replace(/\s+/g,'_')] = row[i];
+  });
+  if (!o.ID) o.ID = String(row[0]);
+  if (o.Default_Qty != null) o.Default_Qty = Number(o.Default_Qty) || 0;
+  if (o.Sort_Order != null) o.Sort_Order = Number(o.Sort_Order) || 0;
+  return o as ComponentRecord;
+}
+
 export function readLibrary(): ComponentRecord[] {
   const sh = ss(SHEET_LIB);
   const values = sh.getRange(1,1, sh.getLastRow(), sh.getLastColumn()).getValues();
   if (!values.length) return [];
   const [hdr, ...rows] = values as any[];
   const out: ComponentRecord[] = [];
-  rows.forEach((r: any[]) => {
-    if (!r[0]) return;
-    const idx = (name: string) => hdr.indexOf(name);
-    const toNum = (val: any) => {
-      const n = Number(val);
-      return isNaN(n) ? undefined : n;
-    };
-    const rec: ComponentRecord = {
-      ID: String(r[idx('ID')] ?? r[0] ?? '').trim(),
-      Category: (String(r[idx('Category')] ?? '').trim() || undefined),
-      Name: (String(r[idx('Name')] ?? '').trim() || undefined),
-      Body: (String(r[idx('Body')] ?? '').trim() || undefined),
-      Tokens: (String(r[idx('Tokens')] ?? '').trim() || undefined),
-      Visibility_Condition: (String(r[idx('Visibility_Condition')] ?? '').trim() || undefined),
-      Mutual_Exclusion_Key: (String(r[idx('Mutual_Exclusion_Key')] ?? '').trim() || undefined),
-      Depends_On: (String(r[idx('Depends_On')] ?? '').trim() || undefined),
-      Default_Qty: toNum(r[idx('Default_Qty')]),
-      Sort_Order: toNum(r[idx('Sort_Order')]),
-      Notes: (String(r[idx('Notes')] ?? '').trim() || undefined),
-    };
-    out.push(rec);
+  rows.forEach(r => {
+    const rec = mapRow(hdr, r as any[]);
+    if (rec) out.push(rec);
   });
   return out;
 }
 
-export function sortLibrary(recs: ComponentRecord[]): ComponentRecord[] {
-  return [...recs].sort((a, b) => (a.Sort_Order ?? 0) - (b.Sort_Order ?? 0));
+export function visibleFor(cfg: PanelConfig, rec: ComponentRecord): boolean {
+  const cond = (rec.Visibility_Condition || '').trim();
+  if (!cond) return true;
+  // very small expression support: key=value AND key!=value
+  const clauses = cond.split(/\s*AND\s*/i);
+  return clauses.every((c)=>{
+    const mNe = c.match(/^([A-Za-z0-9_]+)\s*!=\s*(.+)$/);
+    if (mNe) {
+      const k = mNe[1] as keyof PanelConfig; const v = mNe[2];
+      return String((cfg as any)[k] ?? '').toLowerCase() !== String(v).toLowerCase();
+    }
+    const mEq = c.match(/^([A-Za-z0-9_]+)\s*=\s*(.+)$/);
+    if (mEq) {
+      const k = mEq[1] as keyof PanelConfig; const v = mEq[2];
+      return String((cfg as any)[k] ?? '').toLowerCase() === String(v).toLowerCase();
+    }
+    return true; // unknown clause -> ignore
+  });
 }
 
-export function filterVisible(recs: ComponentRecord[], _cfg?: PanelConfig): ComponentRecord[] {
-  // Placeholder for rules evaluation
-  return recs;
+// Token syntax: ${TOKEN}
+export function renderTokens(body: string, cfg: PanelConfig): string {
+  if (!body) return '';
+  return body.replace(/\$\{\s*([A-Za-z0-9_]+)\s*\}/g, (_m, k) => {
+    const key = String(k).toUpperCase();
+    // Map standard tokens to config keys
+    const map: Record<string, keyof PanelConfig> = {
+      'SERVICE_VOLTAGE': 'serviceVoltage',
+      'PHASE': 'phase',
+      'CONTROL_VOLTAGE': 'controlVoltage',
+      'PLATFORM': 'platform',
+      'HMI_SIZE': 'hmiSize',
+      'PANEL_TYPE': 'panelType'
+    };
+    const cfgKey = map[key] as keyof PanelConfig | undefined;
+    const val = cfgKey ? (cfg as any)[cfgKey] : (cfg as any)[k];
+    return String(val ?? '');
+  });
 }

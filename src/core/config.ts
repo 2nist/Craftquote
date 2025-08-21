@@ -47,7 +47,7 @@ export function getConfig(): PanelConfig {
     valves:          num(v(sh,'B19')),
     sensors:         num(v(sh,'B20'))
   };
-  cfg.isAutomated = (cfg.panelType || '').toUpperCase().endsWith('AC');
+  cfg.isAutomated = (cfg.panelType || '').toUpperCase().includes('AUTOMATED');
   cfg.certUL = (cfg.ul || '').toLowerCase() === 'yes';
   return cfg;
 }
@@ -56,9 +56,9 @@ export function validateConfig(): string[] {
   const c = getConfig();
   const errs: string[] = [];
   if (!c.quoteNumber) errs.push('Quote_Number');
-  ['panelType','serviceVoltage','phase','controlVoltage','disconnect'].forEach((k: any)=> { // @ts-ignore
-    if (!c[k]) errs.push(k);
+  (['panelType','serviceVoltage','phase','controlVoltage','disconnect'] as const).forEach((k)=> {
+    if (!(c as any)[k]) errs.push(k);
   });
-  if (c.isAutomated && !c.platform) errs.push('platform (required for Automated)');
+  if ((c.isAutomated ?? false) && !c.platform) errs.push('platform (required for Automated)');
   return errs;
 }
